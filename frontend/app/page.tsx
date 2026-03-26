@@ -6,6 +6,7 @@ export default async function HomePage() {
 
   try {
     healthData = await getHealth();
+    console.log("checking the pipeline");
   } catch {
     error = 'Could not connect to backend.';
   }
