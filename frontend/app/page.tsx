@@ -1,18 +1,17 @@
-import { getHealth } from "../lib/api";
+import { getHealth } from '../lib/api';
 
 export default async function HomePage() {
-  let healthData : {status: string, timestamp: string} | null = null;
-  let error = "";
+  let healthData: { status: string; timestamp: string } | null = null;
+  let error = '';
 
   try {
     healthData = await getHealth();
-  }catch (err) {
-    error = "Failed to fetch health data.";
-    console.error(err);
+  } catch {
+    error = 'Could not connect to backend.';
   }
 
   return (
-    <main style={{ padding: "2rem", fontFamily: "Arial, sans-serif" }}>
+    <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
       <h1>AI Career Platform</h1>
       <p>Frontend is running.</p>
 
