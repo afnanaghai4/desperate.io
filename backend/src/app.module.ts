@@ -6,7 +6,7 @@ import { AnalysisModule } from './analysis/analysis.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { JobModule } from './jobs/job.module';
-import { ProjectRecommendationModule } from "./project-recommendation/project-recommendation.module";
+import { ProjectRecommendationModule } from './project-recommendation/project-recommendation.module';
 
 import { User } from './entities/user.entity';
 
@@ -36,6 +36,7 @@ import { User } from './entities/user.entity';
     AuthModule,
     JobModule,
     ProjectRecommendationModule,
+    AnalysisModule,
   ],
 })
 export class AppModule {}
