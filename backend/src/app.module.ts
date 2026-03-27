@@ -2,6 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HealthModule } from './health/health.module';
+import { AnalysisModule } from './analysis/analysis.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { JobModule } from './jobs/job.module';
+import { ProjectRecommendationModule } from './project-recommendation/project-recommendation.module';
+
 import { User } from './entities/user.entity';
 
 @Module({
@@ -26,6 +32,11 @@ import { User } from './entities/user.entity';
     }),
 
     HealthModule,
+    UsersModule,
+    AuthModule,
+    JobModule,
+    ProjectRecommendationModule,
+    AnalysisModule,
   ],
 })
 export class AppModule {}
