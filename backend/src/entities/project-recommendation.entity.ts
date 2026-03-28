@@ -1,4 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Analysis } from './analysis.entity';
 import { DifficultyLevel } from 'src/common/enums/difficulty-level.enum';
 
@@ -11,15 +17,17 @@ export class ProjectRecommendation {
   analysisId: number;
 
   @Column()
-  Title: string;
+  title: string;
 
   @Column({ type: 'text' })
-  Description: string;
+  description: string;
 
   @Column({
     type: 'enum',
     enum: DifficultyLevel,
   })
+  difficultyLevel: DifficultyLevel;
+
   @Column()
   timeline: string;
 
@@ -35,11 +43,6 @@ export class ProjectRecommendation {
   @ManyToOne(() => Analysis, (analysis) => analysis.projectRecommendations, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'analysisId' })
   analysis: Analysis;
-
-  @Column({
-    type: 'enum',
-    enum: DifficultyLevel,
-  })
-  Difficulty: DifficultyLevel;
 }

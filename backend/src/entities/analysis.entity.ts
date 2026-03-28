@@ -22,7 +22,7 @@ export class Analysis {
   jobTitle: string;
 
   @Column({ nullable: true })
-  companeyName: string | null;
+  companyName: string | null;
 
   @Column({ type: 'jsonb', default: [] })
   strongPoints: string[];

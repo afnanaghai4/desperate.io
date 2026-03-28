@@ -1,5 +1,6 @@
 import {
   Column,
+  Check,
   Entity,
   PrimaryGeneratedColumn,
   ManyToOne,
@@ -12,6 +13,10 @@ import { User } from './user.entity';
 import { Analysis } from './analysis.entity';
 
 @Entity('jobs')
+@Check(`(
+  ("inputType" = 'TEXT' AND "jobText" IS NOT NULL AND "jobLink" IS NULL) OR
+  ("inputType" = 'LINK' AND "jobLink" IS NOT NULL AND "jobText" IS NULL)
+)`)
 export class Job {
   @PrimaryGeneratedColumn()
   jobId: number;

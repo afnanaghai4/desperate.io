@@ -29,7 +29,7 @@ export class User {
   @Column({ type: 'jsonb', nullable: true })
   profileDetails: Record<string, any> | null;
 
-  @Column()
+  @Column({ select: false })
   passwordHash: string;
 
   @CreateDateColumn()

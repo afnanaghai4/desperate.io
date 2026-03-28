@@ -30,7 +30,7 @@ import { User } from './entities/user.entity';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
         entities: [User, Job, ProjectRecommendation, Analysis],
-        synchronize: true,
+        synchronize: configService.get<string>('DB_SYNC') === 'true',
       }),
     }),
 
