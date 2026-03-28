@@ -8,6 +8,9 @@ import { AuthModule } from './auth/auth.module';
 import { JobModule } from './jobs/job.module';
 import { ProjectRecommendationModule } from './project-recommendation/project-recommendation.module';
 
+import { Analysis } from './entities/analysis.entity';
+import { Job } from './entities/job.entity';
+import { ProjectRecommendation } from './entities/project-recommendation.entity';
 import { User } from './entities/user.entity';
 
 @Module({
@@ -26,8 +29,8 @@ import { User } from './entities/user.entity';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User],
-        synchronize: true,
+        entities: [User, Job, ProjectRecommendation, Analysis],
+        synchronize: configService.get<string>('DB_SYNC') === 'true',
       }),
     }),
 

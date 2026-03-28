@@ -1,0 +1,59 @@
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  OneToOne,
+  JoinColumn,
+  CreateDateColumn,
+} from 'typeorm';
+import { Job } from './job.entity';
+import { ProjectRecommendation } from './project-recommendation.entity';
+
+@Entity('analyses')
+export class Analysis {
+  @PrimaryGeneratedColumn()
+  analysisId: number;
+
+  @Column({ unique: true })
+  jobId: number;
+
+  @Column()
+  jobTitle: string;
+
+  @Column({ nullable: true })
+  companyName: string | null;
+
+  @Column({ type: 'jsonb', default: [] })
+  strongPoints: string[];
+
+  @Column({ type: 'jsonb', default: [] })
+  weakPoints: string[];
+
+  @Column({ type: 'float' })
+  baselineInterviewChancePercent: number;
+
+  @Column({ nullable: true })
+  seniority: string | null;
+
+  @Column({ nullable: true })
+  domain: string | null;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @OneToOne(() => Job, (job) => job.analysis, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'jobId' })
+  job: Job;
+
+  @OneToMany(
+    () => ProjectRecommendation,
+    (projectRecommendation) => projectRecommendation.analysis,
+    {
+      cascade: true,
+    },
+  )
+  projectRecommendations: ProjectRecommendation[];
+}

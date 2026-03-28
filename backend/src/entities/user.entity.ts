@@ -1,13 +1,40 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  CreateDateColumn,
+} from 'typeorm';
+import { UserRole } from '../common/enums/user-role.enum';
+import { Job } from './job.entity';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  userId: number;
+
+  @Column({ unique: true })
+  username: string;
+
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.USER,
+  })
+  role: UserRole;
 
   @Column({ unique: true })
   email: string;
 
-  @Column()
-  name: string;
+  @Column({ type: 'jsonb', nullable: true })
+  profileDetails: Record<string, any> | null;
+
+  @Column({ select: false })
+  passwordHash: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @OneToMany(() => Job, (job) => job.user)
+  jobs: Job[];
 }
