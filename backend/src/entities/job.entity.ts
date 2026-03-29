@@ -21,7 +21,7 @@ export class Job {
   @PrimaryGeneratedColumn()
   jobId: number;
 
-  @Column({ type: 'int' })
+  @Column()
   userId: number;
 
   @Column({
@@ -33,10 +33,10 @@ export class Job {
   @Column({ type: 'text', nullable: true })
   jobText: string | null;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ nullable: true })
   jobLink: string | null;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ nullable: true })
   companyName: string | null;
 
   @CreateDateColumn()

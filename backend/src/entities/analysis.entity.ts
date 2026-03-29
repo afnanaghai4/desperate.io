@@ -15,13 +15,13 @@ export class Analysis {
   @PrimaryGeneratedColumn()
   analysisId: number;
 
-  @Column({ type: 'int', unique: true })
+  @Column({ unique: true })
   jobId: number;
 
-  @Column({ type: 'varchar' })
+  @Column()
   jobTitle: string;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ nullable: true })
   companyName: string | null;
 
   @Column({ type: 'jsonb', default: [] })
@@ -33,10 +33,10 @@ export class Analysis {
   @Column({ type: 'float' })
   baselineInterviewChancePercent: number;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ nullable: true })
   seniority: string | null;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ nullable: true })
   domain: string | null;
 
   @CreateDateColumn()

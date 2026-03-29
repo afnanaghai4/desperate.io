@@ -1,14 +1,19 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  CreateDateColumn,
+} from 'typeorm';
+import { UserRole } from '../common/enums/user-role.enum';
+import { Job } from './job.entity';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
-<<<<<<< Updated upstream
-  id: number;
-=======
   userId: number;
 
-  @Column({ type: 'varchar', unique: true })
+  @Column({ unique: true })
   username: string;
 
   @Column({
@@ -17,19 +22,14 @@ export class User {
     default: UserRole.USER,
   })
   role: UserRole;
->>>>>>> Stashed changes
 
-  @Column({ type: 'varchar', unique: true })
+  @Column({ unique: true })
   email: string;
 
-<<<<<<< Updated upstream
-  @Column()
-  name: string;
-=======
   @Column({ type: 'jsonb', nullable: true })
   profileDetails: Record<string, any> | null;
 
-  @Column({ type: 'varchar', select: false })
+  @Column({ select: false })
   passwordHash: string;
 
   @CreateDateColumn()
@@ -37,5 +37,4 @@ export class User {
 
   @OneToMany(() => Job, (job) => job.user)
   jobs: Job[];
->>>>>>> Stashed changes
 }

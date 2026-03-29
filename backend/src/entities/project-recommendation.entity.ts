@@ -13,10 +13,10 @@ export class ProjectRecommendation {
   @PrimaryGeneratedColumn()
   recommendationId: number;
 
-  @Column({ type: 'int' })
+  @Column()
   analysisId: number;
 
-  @Column({ type: 'varchar' })
+  @Column()
   title: string;
 
   @Column({ type: 'text' })
@@ -28,7 +28,7 @@ export class ProjectRecommendation {
   })
   difficultyLevel: DifficultyLevel;
 
-  @Column({ type: 'varchar' })
+  @Column()
   timeline: string;
 
   @Column({ type: 'jsonb', default: [] })
@@ -37,7 +37,7 @@ export class ProjectRecommendation {
   @Column({ type: 'float' })
   improvedInterviewChancePercent: number;
 
-  @Column({ type: 'int' })
+  @Column()
   displayOrder: number;
 
   @ManyToOne(() => Analysis, (analysis) => analysis.projectRecommendations, {
