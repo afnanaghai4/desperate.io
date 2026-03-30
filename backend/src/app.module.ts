@@ -12,6 +12,7 @@ import { Analysis } from './entities/analysis.entity';
 import { Job } from './entities/job.entity';
 import { ProjectRecommendation } from './entities/project-recommendation.entity';
 import { User } from './entities/user.entity';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -41,5 +42,6 @@ import { User } from './entities/user.entity';
     ProjectRecommendationModule,
     AnalysisModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}

@@ -13,7 +13,7 @@ export class User {
   @PrimaryGeneratedColumn()
   userId: number;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   username: string;
 
   @Column({
@@ -23,13 +23,13 @@ export class User {
   })
   role: UserRole;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   email: string;
 
   @Column({ type: 'jsonb', nullable: true })
   profileDetails: Record<string, any> | null;
 
-  @Column({ select: false })
+  @Column({ type: 'varchar', select: false })
   passwordHash: string;
 
   @CreateDateColumn()
