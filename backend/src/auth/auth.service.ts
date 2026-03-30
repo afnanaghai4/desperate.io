@@ -25,6 +25,11 @@ export class AuthService {
       throw new ConflictException('User with this email already exists');
     }
 
+    const existingUsername = await this.usersService.findByUsername(username);
+    if (existingUsername) {
+      throw new ConflictException('Username is already taken');
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await this.usersService.CreateUser({
       username,
