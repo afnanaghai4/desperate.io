@@ -16,7 +16,9 @@ import { JwtStrategy } from './jwt.strategy';
       useFactory: (configService: ConfigService): JwtModuleOptions => {
         const jwtSecret = configService.get<string>('JWT_SECRET');
         if (!jwtSecret || jwtSecret.trim() === '') {
-          throw new Error('JWT_SECRET environment variable is not set or is empty');
+          throw new Error(
+            'JWT_SECRET environment variable is not set or is empty',
+          );
         }
         return {
           secret: jwtSecret,
