@@ -31,5 +31,20 @@ services:
       postgres:
         condition: service_healthy
 
+  desperate_test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: desperate_test
+    restart: no
+    env_file:
+      - ./backend/.env.test
+    environment:
+      NODE_ENV: test
+    command: npm run test:e2e
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:
