@@ -78,15 +78,24 @@ jobs:
 
       - name: Wait for PostgreSQL to be ready
         run: |
-          for i in {1..30}; do
-            if pg_isready -h localhost -p 5432 -U postgres; then
-              echo "PostgreSQL is ready!"
+          echo "Checking PostgreSQL container status..."
+          docker ps | grep postgres
+          echo ""
+          echo "PostgreSQL logs:"
+          docker logs desperate_postgres || echo "No logs yet"
+          echo ""
+          echo "Attempting to connect to PostgreSQL..."
+          for i in {1..60}; do
+            echo "Attempt $i/60..."
+            if docker exec desperate_postgres pg_isready -U postgres -d desperate_db > /dev/null 2>&1; then
+              echo "✓ PostgreSQL is ready!"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... ($i/30)"
+            echo "PostgreSQL not ready yet, retrying..."
             sleep 1
           done
-          echo "PostgreSQL did not start in time"
+          echo "✗ PostgreSQL failed to start"
+          docker logs desperate_postgres
           exit 1
         working-directory: .
 
@@ -94,6 +103,10 @@ jobs:
         working-directory: ./backend
         env:
           DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: desperate_db
         run: npm run test:e2e
 
       - name: Build backend
