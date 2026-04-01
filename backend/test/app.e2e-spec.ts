@@ -11,6 +11,8 @@ interface AuthResponse {
       email: string;
     };
     accessToken?: string;
+    userId?: number;
+    email?: string;
   };
 }
 
@@ -89,6 +91,6 @@ describe('Auth (e2e)', () => {
 
     const meResData = meRes.body as AuthResponse;
     expect(meResData.data).toBeDefined();
-    expect(meResData.data.user?.email).toBe(registerpayload.email);
+    expect(meResData.data.email).toBe(registerpayload.email);
   });
 });
