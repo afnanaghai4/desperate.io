@@ -42,6 +42,33 @@ jobs:
     name: Backend CI
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: desperate_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d desperate_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      NODE_ENV: test
+      PORT: 4000
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: desperate_test
+      DB_SYNC: true
+      JWT_SECRET: super_secret_jwt_key_change_this
+      JWT_EXPIRES_IN: 1d
+
     defaults:
       run:
         working-directory: ./backend
@@ -66,59 +93,8 @@ jobs:
       - name: Run unit tests
         run: npm run test -- --runInBand
 
-      - name: Install Docker Compose
-        run: |
-          sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
-
-      - name: Start PostgreSQL with Docker Compose
-        working-directory: .
-        env:
-          POSTGRES_DB: desperate_db
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_PORT: 5432
-          BACKEND_PORT: 4000
-        run: docker-compose up -d postgres
-
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          echo "Checking PostgreSQL container status..."
-          docker ps | grep postgres
-          echo ""
-          echo "PostgreSQL logs:"
-          docker logs desperate_postgres || echo "No logs yet"
-          echo ""
-          echo "Attempting to connect to PostgreSQL..."
-          for i in {1..60}; do
-            echo "Attempt $i/60..."
-            if docker exec desperate_postgres pg_isready -U postgres -d desperate_db > /dev/null 2>&1; then
-              echo "✓ PostgreSQL is ready!"
-              exit 0
-            fi
-            echo "PostgreSQL not ready yet, retrying..."
-            sleep 1
-          done
-          echo "✗ PostgreSQL failed to start"
-          docker logs desperate_postgres
-          exit 1
-        working-directory: .
-
       - name: Run e2e tests
-        working-directory: ./backend
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_USERNAME: postgres
-          DB_PASSWORD: postgres
-          DB_NAME: desperate_db
-        run: npm run test:e2e
+        run: npm run test:e2e -- --runInBand
 
       - name: Build backend
         run: npm run build
-
-      - name: Stop Docker services
-        if: always()
-        run: docker-compose down
-        working-directory: .
