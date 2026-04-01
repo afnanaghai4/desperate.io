@@ -74,6 +74,12 @@ jobs:
 
       - name: Start PostgreSQL with Docker Compose
         working-directory: .
+        env:
+          POSTGRES_DB: desperate_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_PORT: 5432
+          BACKEND_PORT: 4000
         run: docker-compose up -d postgres
 
       - name: Wait for PostgreSQL to be ready
