@@ -63,8 +63,33 @@ jobs:
       - name: Run lint
         run: npm run lint
 
-      - name: Run tests
+      - name: Run unit tests
         run: npm run test -- --runInBand
+
+      - name: Start PostgreSQL with Docker Compose
+        run: docker-compose up -d postgres
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U postgres; then
+              echo "PostgreSQL is ready!"
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL... ($i/30)"
+            sleep 1
+          done
+          echo "PostgreSQL did not start in time"
+          exit 1
+        working-directory: .
+
+      - name: Run e2e tests
+        run: npm run test:e2e
 
       - name: Build backend
         run: npm run build
+
+      - name: Stop Docker services
+        if: always()
+        run: docker-compose down
+        working-directory: .
