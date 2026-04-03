@@ -23,7 +23,7 @@ export default function RegisterForm() {
     setIsLoading(true);
 
     try {
-      const response = await signupUser({ username, email, password });
+       await signupUser({ username, email, password });
       router.push('/login');
     } catch (err) {
       setError(

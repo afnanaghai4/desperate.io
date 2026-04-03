@@ -30,7 +30,8 @@ export async function apiFetch<T>(
     throw new Error(errorMessage);
   }
 
-  return res.json();
+  const text = await res.text();
+  return text ? JSON.parse(text) : ({} as T);
 }
 
 export async function getHealth() {
