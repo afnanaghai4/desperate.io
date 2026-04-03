@@ -4,13 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-import { loginUser } from '@/lib/auth-api';
+import { signupUser } from '@/lib/auth-api';
 import AuthCard from '../ui/auth-card';
 import InputField from '../ui/input-field';
 import AuthButton from '../ui/auth-button';
 
-export default function LoginForm() {
+export default function RegisterForm() {
   const router = useRouter();
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -22,14 +23,11 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const response = await loginUser({ email, password });
-      // Store token in localStorage for future requests
-      localStorage.setItem('accessToken', response.data.accessToken);
-      // Redirect to dashboard on success
-      router.push('/dashboard');
+       await signupUser({ username, email, password });
+      router.push('/login');
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Login failed. Please try again.'
+        err instanceof Error ? err.message : 'Signup failed. Please try again.'
       );
     } finally {
       setIsLoading(false);
@@ -38,8 +36,8 @@ export default function LoginForm() {
 
   return (
     <AuthCard
-      title="Welcome Back!"
-      subtitle="Sign in to continue to your dashboard."
+      title="Welcome!"
+      subtitle="Sign up to get started."
     >
       <form className="space-y-5" onSubmit={handleSubmit}>
         {error && (
@@ -47,6 +45,16 @@ export default function LoginForm() {
             {error}
           </div>
         )}
+        <InputField
+          id="username"
+          label="Username"
+          type="text"
+          placeholder="Enter your username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+          disabled={isLoading}
+        />
         <InputField
           id="email"
           label="Email"
@@ -67,13 +75,13 @@ export default function LoginForm() {
           required
           disabled={isLoading}
         />
-        <AuthButton text={isLoading ? 'Signing In...' : 'Sign In'} disabled={isLoading} />
+        <AuthButton text={isLoading ? 'Signing Up...' : 'Sign Up'} disabled={isLoading} />
       </form>
 
       <p className="mt-6 text-center text-sm text-gray-600">
-        Don&apos;t have an account?{" "}
-        <Link href="/signup" className="font-medium text-black underline">
-          Sign Up
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-black underline">
+          Log In
         </Link>
       </p>
     </AuthCard>
