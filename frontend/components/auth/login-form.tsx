@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-import { loginUser } from '@/lib/auth-api';
+import { loginUser, checkAuth } from '@/lib/auth-api';
 import AuthCard from '../ui/auth-card';
 import InputField from '../ui/input-field';
 import AuthButton from '../ui/auth-button';
@@ -15,6 +15,36 @@ export default function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Check if user is already logged in on component mount
+  useEffect(() => {
+    const verifyAuth = async () => {
+      const userInfo = await checkAuth();
+      if (userInfo) {
+        // User is already authenticated, redirect to dashboard
+        router.push('/dashboard');
+      } else {
+        // User is not authenticated, show login form
+        setIsCheckingAuth(false);
+      }
+    };
+
+    verifyAuth();
+  }, [router]);
+
+  if (isCheckingAuth) {
+    return (
+      <AuthCard
+        title="Welcome Back!"
+        subtitle="Sign in to continue to your dashboard."
+      >
+        <div className="flex items-center justify-center py-8">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-black"></div>
+        </div>
+      </AuthCard>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -22,10 +52,13 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const response = await loginUser({ email, password });
-      // Store token in localStorage for future requests
-      localStorage.setItem('accessToken', response.data.accessToken);
+      // loginUser() calls the backend API
+      // The backend responds with Set-Cookie header
+      // The browser (via credentials: 'include') automatically stores it as an HTTP-only cookie
+      // No token is stored in JavaScript or localStorage - it's safe from XSS
+      await loginUser({ email, password });
       // Redirect to dashboard on success
+      // The HTTP-only cookie will be sent automatically with future requests
       router.push('/dashboard');
     } catch (err) {
       setError(

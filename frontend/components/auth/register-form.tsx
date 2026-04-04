@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-import { signupUser } from '@/lib/auth-api';
+import { signupUser, checkAuth } from '@/lib/auth-api';
 import AuthCard from '../ui/auth-card';
 import InputField from '../ui/input-field';
 import AuthButton from '../ui/auth-button';
@@ -16,6 +16,36 @@ export default function RegisterForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Check if user is already logged in on component mount
+  useEffect(() => {
+    const verifyAuth = async () => {
+      const userInfo = await checkAuth();
+      if (userInfo) {
+        // User is already authenticated, redirect to dashboard
+        router.push('/dashboard');
+      } else {
+        // User is not authenticated, show signup form
+        setIsCheckingAuth(false);
+      }
+    };
+
+    verifyAuth();
+  }, [router]);
+
+  if (isCheckingAuth) {
+    return (
+      <AuthCard
+        title="Welcome!"
+        subtitle="Sign up to get started."
+      >
+        <div className="flex items-center justify-center py-8">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-black"></div>
+        </div>
+      </AuthCard>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
