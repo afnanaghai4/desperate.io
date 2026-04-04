@@ -24,7 +24,7 @@ export class ProjectRecommendation {
 
   @Column({
     type: 'enum',
-    enum: DifficultyLevel,
+    enum: DifficultyLevel as Record<string, string>,
   })
   difficultyLevel: DifficultyLevel;
 

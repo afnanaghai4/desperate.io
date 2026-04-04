@@ -26,11 +26,19 @@ export interface SignUpResponse {
     };
 }
 
+export interface UserInfo {
+    id: number;
+    email: string;
+    username?: string;
+}
+
 export async function loginUser(payload: LoginPayload) {
     const response = await apiFetch<LoginResponse>('/auth/login', {
         method: 'POST',
         body: JSON.stringify(payload),
     });
+    // Note: The token is now stored in an HTTP-only cookie by the backend
+    // We don't store it in JavaScript - the browser handles it automatically
     return response;
 }
 
@@ -41,4 +49,26 @@ export async function signupUser(payload: { username: string; email: string; pas
     });
     return response;
 }
+
+export async function checkAuth(): Promise<UserInfo | null> {
+    try {
+        const response = await apiFetch<{ data: UserInfo }>('/auth/me', {
+            method: 'GET',
+        });
+        return response.data;
+    } catch {
+        return null;
+    }
+}
+
+export async function logoutUser() {
+    try {
+        await apiFetch('/auth/logout', {
+            method: 'POST',
+        });
+    } catch {
+        
+    }
+}
+
 

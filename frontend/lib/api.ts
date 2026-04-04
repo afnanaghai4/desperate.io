@@ -6,6 +6,11 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
+    // credentials: 'include' tells the browser to:
+    // 1. Send HTTP-only cookies with this request
+    // 2. Accept and store Set-Cookie headers from the response
+    // This is required for cookie-based authentication to work
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...options?.headers,

@@ -22,10 +22,13 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      const response = await loginUser({ email, password });
-      // Store token in localStorage for future requests
-      localStorage.setItem('accessToken', response.data.accessToken);
+      // loginUser() calls the backend API
+      // The backend responds with Set-Cookie header
+      // The browser (via credentials: 'include') automatically stores it as an HTTP-only cookie
+      // No token is stored in JavaScript or localStorage - it's safe from XSS
+      await loginUser({ email, password });
       // Redirect to dashboard on success
+      // The HTTP-only cookie will be sent automatically with future requests
       router.push('/dashboard');
     } catch (err) {
       setError(

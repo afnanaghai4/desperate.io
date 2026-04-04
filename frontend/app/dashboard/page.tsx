@@ -1,8 +1,16 @@
+import Navbar from "@/components/layout/navbar";
+import Footer from "@/components/layout/footer";
+import DashboardContent from "@/components/dashboard/dashboard-content";
+import ProtectedRoute from "@/components/auth/protected-route";
+
 export default function DashboardPage() {
   return (
-    <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Dashboard</h1>
-      <p>Welcome to your dashboard.</p>
-    </main>
+    <ProtectedRoute>
+      <div className="flex min-h-screen flex-col bg-gray-50">
+        <Navbar />
+        <DashboardContent />
+        <Footer />
+      </div>
+    </ProtectedRoute>
   );
 }
