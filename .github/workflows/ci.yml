@@ -96,7 +96,7 @@ jobs:
       - name: Run backend coverage
         run: npm run test:cov -- --runInBand
 
-         - name: Upload backend coverage to Codecov
+      - name: Upload backend coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           files: ./backend/coverage/lcov.info
