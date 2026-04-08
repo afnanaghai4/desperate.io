@@ -47,11 +47,28 @@ export class UsersService {
     userId: number,
     profileDetails: ProfileDetailsDto,
   ): Promise<User> {
-    const user = await this.usersRepository.findOne({ where: { userId } });
-    if (!user) {
+    // Atomic JSONB merge at database level to prevent lost updates
+    const result = await this.usersRepository
+      .createQueryBuilder()
+      .update(User)
+      .set({
+        profileDetails: () => `"profileDetails" || :patch::jsonb`,
+      })
+      .setParameter('patch', JSON.stringify(profileDetails))
+      .where('userId = :userId', { userId })
+      .execute();
+
+    if (result.affected === 0) {
       throw new NotFoundException('User not found');
     }
-    user.profileDetails = { ...user.profileDetails, ...profileDetails };
-    return this.usersRepository.save(user);
+
+    // Fetch and return updated user
+    const updatedUser = await this.usersRepository.findOne({
+      where: { userId },
+    });
+    if (!updatedUser) {
+      throw new NotFoundException('User not found after update');
+    }
+    return updatedUser;
   }
 }
