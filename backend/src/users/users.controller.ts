@@ -1,4 +1,66 @@
-import { Controller } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  UseGuards,
+  Request,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UsersService } from './users.service';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+
+interface AuthRequest extends Request {
+  user: { userId: number; email: string };
+}
 
 @Controller('users')
-export class UsersController {}
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getProfile(@Request() req: AuthRequest) {
+    const user = await this.usersService.findById(req.user.userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return {
+      message: 'Profile retrieved successfully',
+      data: {
+        profileDetails: user.profileDetails,
+        email: user.email,
+        username: user.username,
+      },
+    };
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async updateProfile(
+    @Request() req: AuthRequest,
+    @Body() updateUserProfileDto: UpdateUserProfileDto,
+  ) {
+    if (!updateUserProfileDto.profileDetails) {
+      throw new BadRequestException('profileDetails is required');
+    }
+    const updatedUser = await this.usersService.updateUserProfile(
+      req.user.userId,
+      updateUserProfileDto.profileDetails,
+    );
+    return {
+      message: 'Profile updated successfully',
+      data: {
+        profileDetails: updatedUser.profileDetails,
+        email: updatedUser.email,
+        username: updatedUser.username,
+      },
+    };
+  }
+}
