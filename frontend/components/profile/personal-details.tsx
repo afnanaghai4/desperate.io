@@ -34,7 +34,7 @@ export default function PersonalDetails({ data, setData, onUpdate, onContinue }:
                 type="text"
                 value={data.fullName}
                 onChange={(e) => setData({ ...data, fullName: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
             placeholder="Enter your full name"
           />
         </div>
@@ -46,12 +46,11 @@ export default function PersonalDetails({ data, setData, onUpdate, onContinue }:
           <input
             type="email"
             value={data.email}
-            onChange={(e) =>
-              setData((prev) => ({ ...prev, email: e.target.value }))
-            }
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+            readOnly
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500 bg-gray-100 cursor-not-allowed"
             placeholder="Enter your email"
           />
+          <p className="mt-1 text-xs text-gray-500">Email cannot be changed from profile. Contact support to change email.</p>
         </div>
 
         <div>
@@ -64,7 +63,7 @@ export default function PersonalDetails({ data, setData, onUpdate, onContinue }:
             onChange={(e) =>
               setData((prev) => ({ ...prev, phone: e.target.value }))
             }
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
             placeholder="Enter your phone number"
           />
         </div>
@@ -79,7 +78,7 @@ export default function PersonalDetails({ data, setData, onUpdate, onContinue }:
             onChange={(e) =>
               setData((prev) => ({ ...prev, address: e.target.value }))
             }
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
             placeholder="Enter your address"
           />
         </div>

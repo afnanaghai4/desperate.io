@@ -19,7 +19,7 @@ export default function ProfessionalDetails({
     onGoBack,
 }: ProfessionalDetailsProps) {
   const handleFieldChange = (
-    id: number,
+    id: string,
     field: keyof ProfessionalFormData,
     value: string | boolean
   ) => {
@@ -30,7 +30,7 @@ export default function ProfessionalDetails({
     );
   };
 
-  const handleCurrentlyWorkingChange = (id: number, value: boolean) => {
+  const handleCurrentlyWorkingChange = (id: string, value: boolean) => {
     setData((prev) =>
       prev.map((entry) =>
         entry.id === id
@@ -46,7 +46,7 @@ export default function ProfessionalDetails({
 
   const handleAddExperience = () => {
     const newEntry: ProfessionalFormData = {
-      id: Date.now(),
+      id: String(Date.now()),
       currentPosition: "",
       company: "",
       experience: "",
@@ -58,7 +58,7 @@ export default function ProfessionalDetails({
     setData((prev) => [...prev, newEntry]);
   }
 
-  const handleDeleteExperience = (id: number) => {
+  const handleDeleteExperience = (id: string) => {
     setData((prev) => prev.filter((entry) => entry.id !== id));
   };
   
@@ -120,7 +120,7 @@ export default function ProfessionalDetails({
                       e.target.value
                     )
                   }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
                   placeholder="Enter your current position"
                 />
               </div>
@@ -135,7 +135,7 @@ export default function ProfessionalDetails({
                   onChange={(e) =>
                     handleFieldChange(entry.id, "company", e.target.value)
                   }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
                   placeholder="Enter your company"
                 />
               </div>
@@ -150,7 +150,7 @@ export default function ProfessionalDetails({
                   onChange={(e) =>
                     handleFieldChange(entry.id, "experience", e.target.value)
                   }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
                   placeholder="Enter your experience"
                 />
               </div>
@@ -165,7 +165,7 @@ export default function ProfessionalDetails({
                   onChange={(e) =>
                     handleFieldChange(entry.id, "skills", e.target.value)
                   }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
                   placeholder="Enter your skills (comma-separated)"
                 />
               </div>
@@ -180,7 +180,7 @@ export default function ProfessionalDetails({
                   onChange={(e) =>
                     handleFieldChange(entry.id, "startDate", e.target.value)
                   }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-blue-500"
                 />
               </div>
 
@@ -195,7 +195,7 @@ export default function ProfessionalDetails({
                     handleFieldChange(entry.id, "endDate", e.target.value)
                   }
                   disabled={entry.currentlyWorking}
-                  className={`w-full rounded-lg border px-4 py-3 outline-none ${
+                  className={`w-full rounded-lg border px-4 py-3 text-gray-900 outline-none ${
                     entry.currentlyWorking
                       ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
                       : "border-gray-300 focus:border-blue-500"

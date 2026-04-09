@@ -1,70 +1,194 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
 import ProfileSidebar from './profile-sidebar';
 import ProfessionalDetails from './professional-details';
 import PersonalDetails from './personal-details';
 
+import { getProfile, updateProfile, type UserProfile, type PersonalInfo, type Experience } from '@/lib/users-api';
+
 type ProfileSection = 'personal' | 'professional';
 
 export interface PersonalFormData {
-    fullName: string;
-    email: string;
-    phone: string;
-    address: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
 }
 
-export interface ProfessionalFormData {
-    id: number;
-  currentPosition: string;
-  company: string;
-  experience: string;
-  skills: string;
-  startDate: string;
-  endDate: string;
-  currentlyWorking: boolean;
+export interface ProfessionalFormData extends Experience {
+  id: string;
 }
 
 export default function ProfileContainer() {
-    const [activeSection, setActiveSection] = useState<ProfileSection>('personal');
+  const router = useRouter();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  const [activeSection, setActiveSection] = useState<ProfileSection>('personal');
 
-    const [personalData, setPersonalData] = useState<PersonalFormData>({
-        fullName: '',
-        email: '',
-        phone: '',
-        address: '',
-    });
+  const [personalData, setPersonalData] = useState<PersonalFormData>({
+    fullName: '',
+    email: '',
+    phone: '',
+    address: '',
+  });
 
-    const [professionalData, setProfessionalData] = useState<ProfessionalFormData[]>(() => [
+  const [professionalData, setProfessionalData] = useState<ProfessionalFormData[]>([
     {
-      id: Date.now(),
-      currentPosition: "",
-      company: "",
-      experience: "",
-      skills: "",
-      startDate: "",
-      endDate: "",
+      id: '0',
+      currentPosition: '',
+      company: '',
+      experience: '',
+      skills: '',
+      startDate: '',
+      endDate: '',
       currentlyWorking: false,
     },
   ]);
-
-    const handleUpdate = () => {
-        if(activeSection === 'personal') {
-            console.log('Updating personal details:', personalData);
-        } else {
-            console.log('Updating professional details:', professionalData);
+  
+  // Load profile on mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        console.log('📥 Fetching profile...');
+        const response = await getProfile();
+        console.log('✓ Profile loaded:', response);
+        
+        const profileDetails = response.data.profileDetails;
+        
+        // Check if profileDetails exists and is not null
+        if (!profileDetails) {
+          console.log('ℹ️ No profile data found - new account, using empty defaults');
+          setLoading(false);
+          return;
         }
-    };
-    const gotoNextSection = () => {
-        setActiveSection('professional');
+
+        setProfile(profileDetails);
+
+        // Extract personal info from flat or nested structure
+        const personalInfo = profileDetails.personalInfo || profileDetails;
+        console.log('📝 Extracted personal info:', personalInfo);
+        
+        const emailFromResponse = response.data.email || '';
+        console.log('📧 Email from response:', emailFromResponse);
+        
+        const newPersonalData = {
+          fullName: personalInfo.fullName || '',
+          email: emailFromResponse,  
+          phone: personalInfo.phone || '',
+          address: personalInfo.address || '',
+        };
+        console.log('📝 Setting personalData to:', newPersonalData);
+        setPersonalData(newPersonalData);
+
+        // Extract experiences - could be array or single object converted to array
+        if (profileDetails.experiences && Array.isArray(profileDetails.experiences) && profileDetails.experiences.length > 0) {
+          console.log('📝 Setting professional data from experiences array');
+          setProfessionalData(
+            profileDetails.experiences.map((exp, idx) => ({
+              id: String(idx),
+              ...exp,
+            }))
+          );
+        } else if (profileDetails.currentPosition || profileDetails.company) {
+          // If data is flat structure, create single experience entry
+          console.log('📝 Converting flat structure to experience array');
+          setProfessionalData([
+            {
+              id: '0',
+              currentPosition: profileDetails.currentPosition || '',
+              company: profileDetails.company || '',
+              experience: profileDetails.experience || '',
+              skills: profileDetails.skills || '',
+              startDate: profileDetails.startDate || '',
+              endDate: profileDetails.endDate || '',
+              currentlyWorking: profileDetails.currentlyWorking || false,
+            },
+          ]);
+        } else {
+          console.log('ℹ️ No existing experiences found');
+        }
+
+        setLoading(false);
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : 'Failed to load profile';
+        console.error('❌ Error loading profile:', err);
+        setError(errorMsg);
+        setLoading(false);
+      }
     };
 
-    const gotoPreviousSection = () => {
-        setActiveSection('personal');
-    };
+    loadProfile();
+  }, []);
 
+  const handleUpdate = async () => {
+    try {
+      setError(''); // Clear previous errors
+      const updateData: UserProfile = {
+        personalInfo: {
+          fullName: personalData.fullName,
+          phone: personalData.phone,
+          address: personalData.address,
+          // ← Exclude email (it's a separate DB column)
+        },
+        experiences: professionalData.map(({ id, ...rest }) => rest), // Remove React ID before sending
+      };
+      const response = await updateProfile(updateData);
+      setProfile(response.data.profileDetails);
+      alert('✓ Profile updated successfully!'); // Temporary feedback
+      console.log('Profile updated:', response);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Update failed';
+      setError(errorMsg);
+      alert(`✗ Error: ${errorMsg}`);
+      console.error('Update error:', err);
+    }
+  };
+
+  const gotoNextSection = () => {
+    setActiveSection('professional');
+  };
+
+  const gotoPreviousSection = () => {
+    setActiveSection('personal');
+  };
+
+  if (loading) {
     return (
-        <main className="flex-1 px-6 py-10">
+      <main className="flex-1 px-6 py-10">
+        <div className="text-center">
+          <div className="text-lg text-gray-700">Loading profile...</div>
+          <div className="mt-2 text-sm text-gray-500">Please wait while we fetch your data</div>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="flex-1 px-6 py-10">
+        <div className="rounded-lg bg-red-50 p-4">
+          <div className="font-semibold text-red-800">Error loading profile:</div>
+          <div className="mt-2 text-red-700">{error}</div>
+          <div className="mt-4 text-sm text-red-600">
+            <p>Make sure:</p>
+            <ul className="ml-4 list-inside list-disc">
+              <li>Backend is running on port 4000</li>
+              <li>You are logged in</li>
+              <li>Check browser console for details</li>
+            </ul>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="flex-1 px-6 py-10">
       <div className="mx-auto flex w-full max-w-6xl gap-6">
         <div className="w-full md:w-[30%]">
           <ProfileSidebar
