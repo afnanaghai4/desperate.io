@@ -6,6 +6,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  UsePipes,
 } from '@nestjs/common';
 
 import { Request } from 'express';
@@ -13,6 +14,7 @@ import { CreateJobDto } from './dto/create-job.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Job } from 'src/entities/job.entity';
 import { JobService } from './job.service';
+import { ValidateJobInputPipe } from './dto/pipes/validate-job-input.pipe';
 
 interface AuthRequest extends Request {
   user: { userId: number; email: string };
@@ -24,6 +26,7 @@ export class JobController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
+  @UsePipes(ValidateJobInputPipe)
   @HttpCode(HttpStatus.CREATED)
   async createJob(
     @Body() createJobDto: CreateJobDto,

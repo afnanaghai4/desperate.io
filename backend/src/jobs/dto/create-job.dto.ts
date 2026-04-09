@@ -32,6 +32,7 @@ export class CreateJobDto {
 
   @Transform(trimTransform)
   @IsString()
+  @IsNotEmpty()
   @MaxLength(255)
   @IsOptional()
   jobTitle?: string;
