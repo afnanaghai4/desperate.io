@@ -105,6 +105,26 @@ export default function ProfileContainer() {
   const handleUpdate = async () => {
     try {
       setUpdateError(''); // Clear previous update errors
+      
+      // Filter out empty experiences (exclude placeholder rows with all empty fields)
+      const filledExperiences = professionalData
+        .filter(exp => 
+          exp.currentPosition?.trim() || 
+          exp.company?.trim() || 
+          exp.experience?.trim() || 
+          exp.skills?.trim() ||
+          exp.startDate
+        )
+        .map(exp => ({
+          currentPosition: exp.currentPosition,
+          company: exp.company,
+          experience: exp.experience,
+          skills: exp.skills,
+          startDate: exp.startDate,
+          endDate: exp.endDate,
+          currentlyWorking: exp.currentlyWorking,
+        }));
+      
       const updateData: UserProfile = {
         personalInfo: {
           fullName: personalData.fullName,
@@ -112,8 +132,7 @@ export default function ProfileContainer() {
           address: personalData.address,
           // ← Exclude email (it's a separate DB column)
         },
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        experiences: professionalData.map(({ id: _id, ...rest }) => rest),
+        experiences: filledExperiences,
       };
       await updateProfile(updateData);
         console.log('✓ Profile updated');
