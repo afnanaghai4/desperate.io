@@ -30,6 +30,9 @@ export class Job {
   })
   inputType: InputType;
 
+  @Column({ type: 'varchar', nullable: true, length: 255 })
+  jobTitle: string | null;
+
   @Column({ type: 'text', nullable: true })
   jobText: string | null;
 
