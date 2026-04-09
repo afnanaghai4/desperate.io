@@ -53,7 +53,6 @@ export default function ProfileContainer() {
       try {
         console.log('📥 Fetching profile...');
         const response = await getProfile();
-        console.log('✓ Profile loaded:', response);
         
         const profileDetails = response.data.profileDetails;
         
@@ -66,10 +65,8 @@ export default function ProfileContainer() {
 
         // Extract personal info from nested structure
         const personalInfo = profileDetails.personalInfo || {};
-        console.log('📝 Extracted personal info:', personalInfo);
         
         const emailFromResponse = response.data.email || '';
-        console.log('📧 Email from response:', emailFromResponse);
         
         const newPersonalData = {
           fullName: personalInfo.fullName || '',
@@ -77,7 +74,6 @@ export default function ProfileContainer() {
           phone: personalInfo.phone || '',
           address: personalInfo.address || '',
         };
-        console.log('📝 Setting personalData to:', newPersonalData);
         setPersonalData(newPersonalData);
 
         // Extract experiences array
@@ -96,7 +92,7 @@ export default function ProfileContainer() {
         setLoading(false);
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Failed to load profile';
-        console.error('❌ Error loading profile:', err);
+        console.error('❌ Error loading profile:', errorMsg);
         setError(errorMsg);
         setLoading(false);
       }
@@ -119,12 +115,12 @@ export default function ProfileContainer() {
         experiences: professionalData.map(({ id: _id, ...rest }) => rest),
       };
       const response = await updateProfile(updateData);
-      console.log('Profile updated:', response);
+        console.log('✓ Profile updated');
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Update failed';
       setError(errorMsg);
       alert(`✗ Error: ${errorMsg}`);
-      console.error('Update error:', err);
+        console.error('❌ Update error:', errorMsg);
     }
   };
 
