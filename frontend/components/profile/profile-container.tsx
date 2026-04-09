@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 import ProfileSidebar from './profile-sidebar';
 import ProfessionalDetails from './professional-details';
 import PersonalDetails from './personal-details';
 
-import { getProfile, updateProfile, type UserProfile, type PersonalInfo, type Experience } from '@/lib/users-api';
+import { getProfile, updateProfile, type UserProfile, type Experience } from '@/lib/users-api';
 
 type ProfileSection = 'personal' | 'professional';
 
@@ -23,8 +22,6 @@ export interface ProfessionalFormData extends Experience {
 }
 
 export default function ProfileContainer() {
-  const router = useRouter();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -67,10 +64,8 @@ export default function ProfileContainer() {
           return;
         }
 
-        setProfile(profileDetails);
-
-        // Extract personal info from flat or nested structure
-        const personalInfo = profileDetails.personalInfo || profileDetails;
+        // Extract personal info from nested structure
+        const personalInfo = profileDetails.personalInfo || {};
         console.log('📝 Extracted personal info:', personalInfo);
         
         const emailFromResponse = response.data.email || '';
@@ -85,7 +80,7 @@ export default function ProfileContainer() {
         console.log('📝 Setting personalData to:', newPersonalData);
         setPersonalData(newPersonalData);
 
-        // Extract experiences - could be array or single object converted to array
+        // Extract experiences array
         if (profileDetails.experiences && Array.isArray(profileDetails.experiences) && profileDetails.experiences.length > 0) {
           console.log('📝 Setting professional data from experiences array');
           setProfessionalData(
@@ -94,21 +89,6 @@ export default function ProfileContainer() {
               ...exp,
             }))
           );
-        } else if (profileDetails.currentPosition || profileDetails.company) {
-          // If data is flat structure, create single experience entry
-          console.log('📝 Converting flat structure to experience array');
-          setProfessionalData([
-            {
-              id: '0',
-              currentPosition: profileDetails.currentPosition || '',
-              company: profileDetails.company || '',
-              experience: profileDetails.experience || '',
-              skills: profileDetails.skills || '',
-              startDate: profileDetails.startDate || '',
-              endDate: profileDetails.endDate || '',
-              currentlyWorking: profileDetails.currentlyWorking || false,
-            },
-          ]);
         } else {
           console.log('ℹ️ No existing experiences found');
         }
@@ -135,11 +115,10 @@ export default function ProfileContainer() {
           address: personalData.address,
           // ← Exclude email (it's a separate DB column)
         },
-        experiences: professionalData.map(({ id, ...rest }) => rest), // Remove React ID before sending
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        experiences: professionalData.map(({ id: _id, ...rest }) => rest),
       };
       const response = await updateProfile(updateData);
-      setProfile(response.data.profileDetails);
-      alert('✓ Profile updated successfully!'); // Temporary feedback
       console.log('Profile updated:', response);
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Update failed';

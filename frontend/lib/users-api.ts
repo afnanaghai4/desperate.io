@@ -23,7 +23,6 @@ export interface Experience {
 export interface UserProfile {
   personalInfo?: PersonalInfo;
   experiences?: Experience[];
-  [key: string]: any;
 }
 
 export interface GetProfileResponse {
