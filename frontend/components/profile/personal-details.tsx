@@ -7,9 +7,10 @@ interface PersonalDetailsProps {
     setData: React.Dispatch<React.SetStateAction<PersonalFormData>>;
     onUpdate: () => void;
     onContinue : () => void;
+    error?: string;
 }
 
-export default function PersonalDetails({ data, setData, onUpdate, onContinue }: PersonalDetailsProps) {
+export default function PersonalDetails({ data, setData, onUpdate, onContinue, error }: PersonalDetailsProps) {
     return (
         <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <div className="mb-6 flex items-center justify-between">
@@ -25,6 +26,11 @@ export default function PersonalDetails({ data, setData, onUpdate, onContinue }:
             Update
         </Button>
       </div>
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-50 p-3">
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <div>
           <label className="mb-2 block text-sm font-medium text-gray-700">
@@ -34,7 +40,7 @@ export default function PersonalDetails({ data, setData, onUpdate, onContinue }:
                 type="text"
                 value={data.fullName}
                 onChange={(e) => setData({ ...data, fullName: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
             placeholder="Enter your full name"
           />
         </div>
@@ -46,12 +52,11 @@ export default function PersonalDetails({ data, setData, onUpdate, onContinue }:
           <input
             type="email"
             value={data.email}
-            onChange={(e) =>
-              setData((prev) => ({ ...prev, email: e.target.value }))
-            }
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+            readOnly
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500 bg-gray-100 cursor-not-allowed"
             placeholder="Enter your email"
           />
+          <p className="mt-1 text-xs text-gray-500">Email cannot be changed from profile. Contact support to change email.</p>
         </div>
 
         <div>
@@ -64,7 +69,7 @@ export default function PersonalDetails({ data, setData, onUpdate, onContinue }:
             onChange={(e) =>
               setData((prev) => ({ ...prev, phone: e.target.value }))
             }
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
             placeholder="Enter your phone number"
           />
         </div>
@@ -79,7 +84,7 @@ export default function PersonalDetails({ data, setData, onUpdate, onContinue }:
             onChange={(e) =>
               setData((prev) => ({ ...prev, address: e.target.value }))
             }
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-blue-500"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
             placeholder="Enter your address"
           />
         </div>

@@ -4,11 +4,12 @@ import {
   ValidateNested,
   IsEmail,
   IsBoolean,
-  IsNotEmpty,
+  IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class ProfileDetailsDto {
+// Personal information
+export class PersonalInfoDto {
   @IsOptional()
   @IsString()
   fullName?: string;
@@ -24,7 +25,10 @@ export class ProfileDetailsDto {
   @IsOptional()
   @IsString()
   address?: string;
+}
 
+// Individual experience/job entry
+export class ExperienceDto {
   @IsOptional()
   @IsString()
   currentPosition?: string;
@@ -56,9 +60,18 @@ export class ProfileDetailsDto {
   [key: string]: any;
 }
 
-export class UpdateUserProfileDto {
-  @IsNotEmpty()
+// Overall profile update DTO
+export class UpdateProfileDto {
+  @IsOptional()
   @ValidateNested()
-  @Type(() => ProfileDetailsDto)
-  profileDetails?: ProfileDetailsDto;
+  @Type(() => PersonalInfoDto)
+  personalInfo?: PersonalInfoDto;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ExperienceDto)
+  experiences?: ExperienceDto[];
+
+  [key: string]: any;
 }

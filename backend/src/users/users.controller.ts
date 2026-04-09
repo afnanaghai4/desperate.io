@@ -8,11 +8,10 @@ import {
   HttpCode,
   HttpStatus,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from './users.service';
-import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { UpdateProfileDto } from './dto/update-user-profile.dto';
 
 interface AuthRequest extends Request {
   user: { userId: number; email: string };
@@ -45,14 +44,11 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   async updateProfile(
     @Request() req: AuthRequest,
-    @Body() updateUserProfileDto: UpdateUserProfileDto,
+    @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    if (!updateUserProfileDto.profileDetails) {
-      throw new BadRequestException('profileDetails is required');
-    }
     const updatedUser = await this.usersService.updateUserProfile(
       req.user.userId,
-      updateUserProfileDto.profileDetails,
+      updateProfileDto,
     );
     return {
       message: 'Profile updated successfully',

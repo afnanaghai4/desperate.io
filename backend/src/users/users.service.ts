@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
-import { ProfileDetailsDto } from './dto/update-user-profile.dto';
+import { UpdateProfileDto } from './dto/update-user-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -45,16 +45,18 @@ export class UsersService {
 
   async updateUserProfile(
     userId: number,
-    profileDetails: ProfileDetailsDto,
+    profileData: UpdateProfileDto,
   ): Promise<User> {
-    // Atomic JSONB merge at database level to prevent lost updates
+    // Atomic JSONB merge at database level
+    // Handles both NULL (new profile) and existing profileDetails
     const result = await this.usersRepository
       .createQueryBuilder()
       .update(User)
       .set({
-        profileDetails: () => `"profileDetails" || :patch::jsonb`,
+        profileDetails: () =>
+          `CASE WHEN "profileDetails" IS NULL THEN :patch::jsonb ELSE "profileDetails" || :patch::jsonb END`,
       })
-      .setParameter('patch', JSON.stringify(profileDetails))
+      .setParameter('patch', JSON.stringify(profileData))
       .where('userId = :userId', { userId })
       .execute();
 
