@@ -22,6 +22,16 @@ export class ValidateJobInputPipe implements PipeTransform<
       return value as JobInputDto;
     }
 
+    // Guard: Ensure value is an object
+    if (
+      value === null ||
+      value === undefined ||
+      typeof value !== 'object' ||
+      Array.isArray(value)
+    ) {
+      throw new BadRequestException('Request body must be a valid JSON object');
+    }
+
     const dto = value as JobInputDto;
 
     if (!dto.inputType) {
