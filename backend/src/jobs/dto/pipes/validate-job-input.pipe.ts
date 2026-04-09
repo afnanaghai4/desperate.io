@@ -52,6 +52,8 @@ export class ValidateJobInputPipe implements PipeTransform<
           'When inputType is TEXT, jobText must not be empty and jobLink must be null',
         );
       }
+    } else {
+      throw new BadRequestException('inputType must be either LINK or TEXT');
     }
 
     return value as JobInputDto;
