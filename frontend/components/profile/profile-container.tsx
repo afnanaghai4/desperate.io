@@ -113,7 +113,8 @@ export default function ProfileContainer() {
           exp.company?.trim() || 
           exp.experience?.trim() || 
           exp.skills?.trim() ||
-          exp.startDate
+          exp.startDate ||
+          exp.currentlyWorking
         )
         .map(exp => ({
           currentPosition: exp.currentPosition,
