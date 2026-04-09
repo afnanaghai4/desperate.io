@@ -23,7 +23,8 @@ export interface ProfessionalFormData extends Experience {
 
 export default function ProfileContainer() {
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [loadError, setLoadError] = useState('');
+  const [updateError, setUpdateError] = useState('');
   
   const [activeSection, setActiveSection] = useState<ProfileSection>('personal');
 
@@ -93,7 +94,7 @@ export default function ProfileContainer() {
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Failed to load profile';
         console.error('❌ Error loading profile:', errorMsg);
-        setError(errorMsg);
+        setLoadError(errorMsg);
         setLoading(false);
       }
     };
@@ -103,7 +104,7 @@ export default function ProfileContainer() {
 
   const handleUpdate = async () => {
     try {
-      setError(''); // Clear previous errors
+      setUpdateError(''); // Clear previous update errors
       const updateData: UserProfile = {
         personalInfo: {
           fullName: personalData.fullName,
@@ -114,11 +115,11 @@ export default function ProfileContainer() {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         experiences: professionalData.map(({ id: _id, ...rest }) => rest),
       };
-      const response = await updateProfile(updateData);
+      await updateProfile(updateData);
         console.log('✓ Profile updated');
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Update failed';
-      setError(errorMsg);
+      setUpdateError(errorMsg);
       alert(`✗ Error: ${errorMsg}`);
         console.error('❌ Update error:', errorMsg);
     }
@@ -143,12 +144,12 @@ export default function ProfileContainer() {
     );
   }
 
-  if (error) {
+  if (loadError) {
     return (
       <main className="flex-1 px-6 py-10">
         <div className="rounded-lg bg-red-50 p-4">
           <div className="font-semibold text-red-800">Error loading profile:</div>
-          <div className="mt-2 text-red-700">{error}</div>
+          <div className="mt-2 text-red-700">{loadError}</div>
           <div className="mt-4 text-sm text-red-600">
             <p>Make sure:</p>
             <ul className="ml-4 list-inside list-disc">
@@ -179,6 +180,7 @@ export default function ProfileContainer() {
               setData={setPersonalData}
               onUpdate={handleUpdate}
               onContinue={gotoNextSection}
+              error={updateError}
             />
           ) : (
             <ProfessionalDetails
@@ -186,6 +188,7 @@ export default function ProfileContainer() {
               setData={setProfessionalData}
               onUpdate={handleUpdate}
               onGoBack={gotoPreviousSection}
+              error={updateError}
             />
           )}
         </div>

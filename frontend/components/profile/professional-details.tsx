@@ -10,6 +10,7 @@ interface ProfessionalDetailsProps {
     setData: React.Dispatch<React.SetStateAction<ProfessionalFormData[]>>;
     onUpdate: () => void;
     onGoBack: () => void;
+    error?: string;
 }
 
 export default function ProfessionalDetails({
@@ -17,6 +18,7 @@ export default function ProfessionalDetails({
     setData,
     onUpdate,
     onGoBack,
+    error,
 }: ProfessionalDetailsProps) {
   const handleFieldChange = (
     id: string,
@@ -78,6 +80,12 @@ export default function ProfessionalDetails({
           Update
         </Button>
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-50 p-3">
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
 
       <div className="space-y-6">
         {!Array.isArray(data) ? (

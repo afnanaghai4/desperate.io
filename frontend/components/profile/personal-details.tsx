@@ -7,9 +7,10 @@ interface PersonalDetailsProps {
     setData: React.Dispatch<React.SetStateAction<PersonalFormData>>;
     onUpdate: () => void;
     onContinue : () => void;
+    error?: string;
 }
 
-export default function PersonalDetails({ data, setData, onUpdate, onContinue }: PersonalDetailsProps) {
+export default function PersonalDetails({ data, setData, onUpdate, onContinue, error }: PersonalDetailsProps) {
     return (
         <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <div className="mb-6 flex items-center justify-between">
@@ -25,6 +26,11 @@ export default function PersonalDetails({ data, setData, onUpdate, onContinue }:
             Update
         </Button>
       </div>
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-50 p-3">
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <div>
           <label className="mb-2 block text-sm font-medium text-gray-700">

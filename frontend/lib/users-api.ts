@@ -28,7 +28,7 @@ export interface UserProfile {
 export interface GetProfileResponse {
   message: string;
   data: {
-    profileDetails: UserProfile;
+    profileDetails: UserProfile | null;
     email: string;
     username: string;
   };
