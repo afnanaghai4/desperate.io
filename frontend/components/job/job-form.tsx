@@ -69,6 +69,12 @@ export default function JobForm() {
 
         const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        
+        // Guard against duplicate submissions while one is in-flight
+        if (loading) {
+            return;
+        }
+        
         setError(null);
         setResult(null);  // Clear stale success result before new attempt
         setLoading(true);
