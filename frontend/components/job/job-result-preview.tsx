@@ -9,7 +9,7 @@ type JobResult = {
   jobTitle?: string | null;
   companyName?: string | null;
   inputType: InputType;
-  createdAt?: string | Date;
+  createdAt: string;  // Always a string from JSON response
 };
 
 type Props = {

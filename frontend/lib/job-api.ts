@@ -24,7 +24,7 @@ export interface CreateJobResponse {
         jobText: string | null;
         jobLink: string | null;
         companyName: string | null;
-        createdAt: Date;
+        createdAt: string;  // JSON response arrives as ISO string, not Date object
         };
     }
 

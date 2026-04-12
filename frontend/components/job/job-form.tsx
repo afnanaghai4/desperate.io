@@ -15,7 +15,7 @@ type JobFormData = {
     inputType: InputType;
     jobText: string | null;
     jobLink: string | null;
-    createdAt: Date;
+    createdAt: string;  // JSON response arrives as ISO string, not Date object
 };
 
 export default function JobForm() {
@@ -70,6 +70,7 @@ export default function JobForm() {
         const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError(null);
+        setResult(null);  // Clear stale success result before new attempt
         setLoading(true);
         
         const validationError = validateForm();
@@ -95,7 +96,7 @@ export default function JobForm() {
             setJobText("");
             setJobLink("");
             setInputType(InputType.TEXT);  
-        } catch (err: Error | unknown) {
+        } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : "An error occurred while submitting the job";
             setError(errorMessage);
         } finally {
