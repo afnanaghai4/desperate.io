@@ -32,5 +32,4 @@ export class JobService {
       take,
     });
   }
-
 }
