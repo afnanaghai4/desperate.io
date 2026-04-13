@@ -19,4 +19,17 @@ export class JobService {
 
     return this.jobRepository.save(job);
   }
+
+  async getJobsByUserId(
+    userId: number,
+    skip: number = 0,
+    take: number = 10,
+  ): Promise<Job[]> {
+    return this.jobRepository.find({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+      skip,
+      take,
+    });
+  }
 }
