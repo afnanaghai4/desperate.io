@@ -158,7 +158,7 @@ export default function JobForm() {
               value={jobText}
               onChange={(e) => setJobText(e.target.value)}
               disabled={loading}
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none transition placeholder:text-gray-500 focus:border-black disabled:cursor-not-allowed disabled:bg-gray-100"
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-black disabled:cursor-not-allowed disabled:bg-gray-100"
             />
             <p className="mt-2 text-xs text-gray-500">
               Minimum 10 characters.
