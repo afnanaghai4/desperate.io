@@ -1,6 +1,6 @@
 "use client";
 
-import {InputType} from '@/lib/job-api';
+import {InputType} from '@/types/job';
 
 type Props = {
     value: InputType;
@@ -8,15 +8,15 @@ type Props = {
 };
 
 export default function JobInputToggle({ value, onChange }: Props) {
-    const isText = value === InputType.TEXT;
-    const isLink = value === InputType.LINK;
+    const isText = value === "TEXT";
+    const isLink = value === "LINK";
     
     return (
     <div className="w-full" role="group" aria-label="Job input type selection">
       <div className="grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1">
         <button
           type="button"
-          onClick={() => onChange(InputType.TEXT)}
+          onClick={() => onChange("TEXT")}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
             isText
               ? "bg-white shadow text-black"
@@ -28,7 +28,7 @@ export default function JobInputToggle({ value, onChange }: Props) {
 
         <button
           type="button"
-          onClick={() => onChange(InputType.LINK)}
+          onClick={() => onChange("LINK")}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
             isLink
               ? "bg-white shadow text-black"

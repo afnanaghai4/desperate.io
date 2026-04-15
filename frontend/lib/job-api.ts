@@ -1,9 +1,7 @@
 import { apiFetch } from "./api";
 
-export enum InputType {
-    TEXT = 'TEXT',
-    LINK = 'LINK',
-}
+import {Job, InputType} from "@/types/job";
+
 
 export interface CreateJobPayload {
     companyName?: string;
@@ -36,4 +34,12 @@ export async function createJob(
         method: 'POST',
         body: JSON.stringify(payload),
     });
+}
+
+export async function getJobs(skip: number = 0, take: number = 10): Promise<{ jobs: Job[]; hasMore: boolean }> {
+    return apiFetch<{ message: string; data: Job[]; hasMore: boolean }>(`/jobs?skip=${skip}&take=${take}`)
+        .then(response => ({
+            jobs: response.data,
+            hasMore: response.hasMore,
+        }));
 }

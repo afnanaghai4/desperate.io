@@ -24,12 +24,22 @@ export class JobService {
     userId: number,
     skip: number = 0,
     take: number = 10,
-  ): Promise<Job[]> {
-    return this.jobRepository.find({
+  ): Promise<{ jobs: Job[]; hasMore: boolean }> {
+    // Fetch take+1 to determine if more exists
+    const jobs = await this.jobRepository.find({
       where: { userId },
       order: { createdAt: 'DESC' },
       skip,
-      take,
+      take: take + 1,
     });
+
+    // If we got more than requested, there are more pages
+    const hasMore = jobs.length > take;
+
+    // Return only the requested amount
+    return {
+      jobs: jobs.slice(0, take),
+      hasMore,
+    };
   }
 }

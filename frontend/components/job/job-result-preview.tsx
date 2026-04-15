@@ -1,6 +1,6 @@
 "use client";
 
-import { InputType } from "@/lib/job-api";
+import { InputType } from "@/types/job";
 
 
 type JobResult = {

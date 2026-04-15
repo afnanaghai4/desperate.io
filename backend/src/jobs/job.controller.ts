@@ -49,15 +49,16 @@ export class JobController {
   async getUserJobs(
     @Request() req: AuthRequest,
     @Query() query: GetJobsQueryDto,
-  ): Promise<{ message: string; data: Job[] }> {
-    const jobs = await this.jobService.getJobsByUserId(
+  ): Promise<{ message: string; data: Job[]; hasMore: boolean }> {
+    const result = await this.jobService.getJobsByUserId(
       req.user.userId,
       query.skip,
       query.take,
     );
     return {
       message: 'Jobs retrieved successfully',
-      data: jobs,
+      data: result.jobs,
+      hasMore: result.hasMore,
     };
   }
 }
