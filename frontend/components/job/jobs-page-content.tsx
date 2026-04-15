@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import JobsList from "./jobs-list";
 import {Job} from "@/types/job";
@@ -15,38 +15,53 @@ export default function JobsPageContent() {
     const [totalPages, setTotalPages] = useState(1);
     const pageSize = 6; 
     const skip = (currentPage - 1) * pageSize;
+    const abortControllerRef = useRef<AbortController | null>(null);
 
     useEffect(() => {
+        // Cancel previous request if still pending
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+
         const fetchJobs = async () => {
             try {
                 setIsLoading(true);
                 console.log('📥 Fetching jobs...')
-                const { jobs, hasMore } = await getJobs(skip, pageSize);
+                const { jobs: fetchedJobs, totalPages: apiTotalPages } = await getJobs(skip, pageSize);
 
-                if(!jobs || jobs.length === 0) {
+                // Check if this request was aborted
+                if (abortControllerRef.current?.signal.aborted) {
+                    console.log('Request was cancelled, ignoring response');
+                    return;
+                }
+
+                if(!fetchedJobs || fetchedJobs.length === 0) {
+                    setJobs([]);
                     setTotalPages(1);
                     setIsLoading(false);
                     return;
                 }
 
-                setJobs(jobs);
-                
-                // Use hasMore flag to determine total pages
-                if (hasMore) {
-                    setTotalPages(currentPage + 1);
-                } else {
-                    setTotalPages(currentPage);
-                }
+                setJobs(fetchedJobs);
+                setTotalPages(apiTotalPages);
                 setIsLoading(false);
 
             } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : 'Failed to fetch jobs';
-        console.error('❌ Error loading jobs:', errorMsg);
-        setIsLoading(false);
+                // Ignore abort errors
+                if (err instanceof Error && err.name === 'AbortError') {
+                    return;
+                }
+                
+                const errorMsg = err instanceof Error ? err.message : 'Failed to fetch jobs';
+                console.error('❌ Error loading jobs:', errorMsg);
+                setJobs([]);
+                setTotalPages(1);
+                setIsLoading(false);
+            }
         }
-    }
-    fetchJobs();
-  }, [skip, currentPage]);
+        
+        fetchJobs();
+    }, [skip, currentPage]);
 
 
 
@@ -74,6 +89,14 @@ export default function JobsPageContent() {
         onPreviousPage={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
         onNextPage={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
         totalPages={totalPages}
+        onView={(jobId) => {
+            console.log('View job:', jobId);
+            // TODO: Implement view job functionality
+        }}
+        onDelete={(jobId) => {
+            console.log('Delete job:', jobId);
+            // TODO: Implement delete job functionality
+        }}
         />
       {/* Jobs List Component - Add your logic here */}
       {/* <JobsList jobs={jobs} currentPage={currentPage} totalPages={totalPages} ... /> */}

@@ -36,10 +36,12 @@ export async function createJob(
     });
 }
 
-export async function getJobs(skip: number = 0, take: number = 10): Promise<{ jobs: Job[]; hasMore: boolean }> {
-    return apiFetch<{ message: string; data: Job[]; hasMore: boolean }>(`/jobs?skip=${skip}&take=${take}`)
+export async function getJobs(skip: number = 0, take: number = 10): Promise<{ jobs: Job[]; hasMore: boolean; totalCount: number; totalPages: number }> {
+    return apiFetch<{ message: string; data: Job[]; hasMore: boolean; totalCount: number; totalPages: number }>(`/jobs?skip=${skip}&take=${take}`)
         .then(response => ({
             jobs: response.data,
             hasMore: response.hasMore,
+            totalCount: response.totalCount,
+            totalPages: response.totalPages,
         }));
 }

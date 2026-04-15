@@ -17,6 +17,7 @@ export default function JobInputToggle({ value, onChange }: Props) {
         <button
           type="button"
           onClick={() => onChange("TEXT")}
+          aria-pressed={isText}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
             isText
               ? "bg-white shadow text-black"
@@ -29,6 +30,7 @@ export default function JobInputToggle({ value, onChange }: Props) {
         <button
           type="button"
           onClick={() => onChange("LINK")}
+          aria-pressed={isLink}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
             isLink
               ? "bg-white shadow text-black"

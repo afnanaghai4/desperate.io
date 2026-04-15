@@ -10,6 +10,8 @@ interface JobsListProps {
   onPreviousPage: () => void;
   onNextPage: () => void;
   isLoading: boolean;
+  onView?: (jobId: number) => void;
+  onDelete?: (jobId: number) => void;
 }
 
 export default function JobsList({
@@ -19,6 +21,8 @@ export default function JobsList({
   onPreviousPage,
   onNextPage,
   isLoading,
+  onView,
+  onDelete,
 }: JobsListProps) {
   if (isLoading) {
     return (
@@ -44,7 +48,12 @@ export default function JobsList({
       {/* Jobs Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {jobs.map((job) => (
-          <JobCard key={job.jobId} job={job} />
+          <JobCard 
+            key={job.jobId} 
+            job={job}
+            onView={onView}
+            onDelete={onDelete}
+          />
         ))}
       </div>
 

@@ -49,16 +49,28 @@ export class JobController {
   async getUserJobs(
     @Request() req: AuthRequest,
     @Query() query: GetJobsQueryDto,
-  ): Promise<{ message: string; data: Job[]; hasMore: boolean }> {
+  ): Promise<{
+    message: string;
+    data: Job[];
+    hasMore: boolean;
+    totalCount: number;
+    totalPages: number;
+  }> {
     const result = await this.jobService.getJobsByUserId(
       req.user.userId,
       query.skip,
       query.take,
     );
+
+    // Calculate total pages (use nullish coalescing for default)
+    const totalPages = Math.ceil(result.totalCount / (query.take ?? 10));
+
     return {
       message: 'Jobs retrieved successfully',
       data: result.jobs,
       hasMore: result.hasMore,
+      totalCount: result.totalCount,
+      totalPages,
     };
   }
 }
