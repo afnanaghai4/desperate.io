@@ -20,13 +20,13 @@ export default function DashboardWidgets() {
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-gray-900">Quick Actions</h2>
         <p className="mt-2 text-sm text-gray-600 mb-4">
-          Analyze a new job posting to get recommendations.
+          View and manage all your job postings in one place.
         </p>
         <Link
           href="/jobs"
           className="inline-block rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
         >
-          Submit Job Posting
+          Manage Jobs
         </Link>
       </div>
     </section>

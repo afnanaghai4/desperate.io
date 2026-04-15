@@ -5,7 +5,8 @@ import InputField from "../ui/input-field";
 import JobInputToggle from './job-input-toggle';
 import JobSubmitButton from './job-submit-button';
 import JobResultPreview from './job-result-preview';
-import { createJob, InputType } from '@/lib/job-api';
+import { createJob } from '@/lib/job-api';
+import { InputType } from '@/types/job';
 
 type JobFormData = {
     jobId: number;
@@ -19,7 +20,7 @@ type JobFormData = {
 };
 
 export default function JobForm() {
-    const [inputType, setInputType] = useState<InputType>(InputType.TEXT);
+    const [inputType, setInputType] = useState<InputType>("TEXT");
     const [companyName, setCompanyName] = useState('');
     const [jobTitle, setJobTitle] = useState('');
     const [jobText, setJobText] = useState('');
@@ -29,7 +30,7 @@ export default function JobForm() {
     const [result, setResult] = useState<JobFormData | null>(null);
     
     const conditionalResetField = (type: InputType) => {
-        if (type === InputType.TEXT) {
+        if (type === "TEXT") {
             setJobLink("");
         } else {
             setJobText("");
@@ -44,7 +45,7 @@ export default function JobForm() {
     };
 
     const validateForm = (): string | null => {
-        if(inputType === InputType.TEXT) {
+        if(inputType === "TEXT") {
             const trimmedText = jobText.trim()
 
             if(!trimmedText) {
@@ -56,7 +57,7 @@ export default function JobForm() {
             }
         }
 
-        if(inputType === InputType.LINK) {
+        if(inputType === "LINK") {
             const trimmedLink = jobLink.trim();
 
             if(!trimmedLink) {
@@ -89,8 +90,8 @@ export default function JobForm() {
         const payload = {
             inputType,
             jobTitle: jobTitle.trim() || undefined,
-            jobText: inputType === InputType.TEXT ? jobText.trim() : undefined,
-            jobLink: inputType === InputType.LINK ? jobLink.trim() : undefined,
+            jobText: inputType === "TEXT" ? jobText.trim() : undefined,
+            jobLink: inputType === "LINK" ? jobLink.trim() : undefined,
             companyName: companyName.trim() || undefined,
         }
 
@@ -101,7 +102,7 @@ export default function JobForm() {
             setJobTitle("");
             setJobText("");
             setJobLink("");
-            setInputType(InputType.TEXT);  
+            setInputType("TEXT");  
         } catch (err: unknown) {
             const errorMessage = err instanceof Error ? err.message : "An error occurred while submitting the job";
             setError(errorMessage);
@@ -142,7 +143,7 @@ export default function JobForm() {
             placeholder="Optional"
         />
 
-        {inputType === InputType.TEXT ? (
+        {inputType === "TEXT" ? (
           <div>
             <label
               htmlFor="jobText"
