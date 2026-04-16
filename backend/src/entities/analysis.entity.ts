@@ -33,19 +33,19 @@ export class Analysis {
   @Column({ type: 'varchar', nullable: true })
   roleDirection: string | null;
 
-  @Column({ type: 'jsonb', nullable: true, default: [] })
+  @Column({ type: 'jsonb', default: [] })
   skills: string[];
 
-  @Column({ type: 'jsonb', nullable: true, default: [] })
+  @Column({ type: 'jsonb', default: [] })
   tools: string[];
 
-  @Column({ type: 'jsonb', nullable: true, default: [] })
+  @Column({ type: 'jsonb', default: [] })
   cloudPlatforms: string[];
 
-  @Column({ type: 'jsonb', nullable: true, default: [] })
+  @Column({ type: 'jsonb', default: [] })
   databases: string[];
 
-  @Column({ type: 'jsonb', nullable: true, default: [] })
+  @Column({ type: 'jsonb', default: [] })
   frameworks: string[];
 
   @Column({ type: 'float' })
