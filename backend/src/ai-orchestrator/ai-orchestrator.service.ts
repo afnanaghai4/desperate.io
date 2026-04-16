@@ -15,14 +15,19 @@ interface JobAnalysisResult {
 
 @Injectable()
 export class AiOrchestratorService {
-  private openai: OpenAI;
+  private openai: OpenAI | null = null;
 
-  constructor(private configService: ConfigService) {
-    const apiKey = this.configService.get<string>('OPENAI_API_KEY');
-    if (!apiKey) {
-      throw new Error('OPENAI_API_KEY environment variable is not set');
+  constructor(private configService: ConfigService) {}
+
+  private getOpenAiClient(): OpenAI {
+    if (!this.openai) {
+      const apiKey = this.configService.get<string>('OPENAI_API_KEY');
+      if (!apiKey) {
+        throw new Error('OPENAI_API_KEY environment variable is not set');
+      }
+      this.openai = new OpenAI({ apiKey });
     }
-    this.openai = new OpenAI({ apiKey });
+    return this.openai;
   }
 
   async extractJobMetadata(jobDescription: string): Promise<JobAnalysisResult> {
@@ -30,6 +35,8 @@ export class AiOrchestratorService {
     if (!model) {
       throw new Error('OPENAI_MODEL environment variable is not set');
     }
+
+    const openai = this.getOpenAiClient();
 
     const prompt = `Analyze this job description and extract the following information in JSON format:
 - roleDirection: (e.g., "Backend", "Frontend", "Full-stack", "DevOps", "Data Engineering")
@@ -46,7 +53,7 @@ ${jobDescription}
 
 Return ONLY valid JSON, no additional text.`;
 
-    const response = await this.openai.chat.completions.create({
+    const response = await openai.chat.completions.create({
       model,
       messages: [
         {
