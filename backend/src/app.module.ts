@@ -13,6 +13,7 @@ import { Job } from './entities/job.entity';
 import { ProjectRecommendation } from './entities/project-recommendation.entity';
 import { User } from './entities/user.entity';
 import { AppController } from './app.controller';
+import { AiOrchestratorModule } from './ai-orchestrator/ai-orchestrator.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { AppController } from './app.controller';
     JobModule,
     ProjectRecommendationModule,
     AnalysisModule,
+    AiOrchestratorModule,
   ],
   controllers: [AppController],
 })
