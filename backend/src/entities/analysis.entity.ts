@@ -30,6 +30,24 @@ export class Analysis {
   @Column({ type: 'jsonb', default: [] })
   weakPoints: string[];
 
+  @Column({ type: 'varchar', nullable: true })
+  roleDirection: string | null;
+
+  @Column({ type: 'jsonb', nullable: true, default: [] })
+  skills: string[];
+
+  @Column({ type: 'jsonb', nullable: true, default: [] })
+  tools: string[];
+
+  @Column({ type: 'jsonb', nullable: true, default: [] })
+  cloudPlatforms: string[];
+
+  @Column({ type: 'jsonb', nullable: true, default: [] })
+  databases: string[];
+
+  @Column({ type: 'jsonb', nullable: true, default: [] })
+  frameworks: string[];
+
   @Column({ type: 'float' })
   baselineInterviewChancePercent: number;
 
