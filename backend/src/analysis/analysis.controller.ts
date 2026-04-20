@@ -61,6 +61,10 @@ export class AnalysisController {
     }
 
     // Call the service with userId and jobDescription
+    if (!req.user || typeof req.user.userId !== 'number') {
+      throw new BadRequestException('User context is invalid or missing');
+    }
+
     const request: AnalyzeJobFitRequest = {
       userId: req.user.userId,
       jobDescription,

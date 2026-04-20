@@ -83,8 +83,14 @@ export class AiOrchestratorService {
       throw new Error('Request body is required.');
     }
 
-    if (typeof request.userId !== 'number' || request.userId <= 0) {
-      throw new Error('Invalid or missing userId');
+    // Enforce userId is a finite, positive integer (blocks NaN, Infinity, decimals)
+    if (
+      typeof request.userId !== 'number' ||
+      !Number.isFinite(request.userId) ||
+      !Number.isInteger(request.userId) ||
+      request.userId <= 0
+    ) {
+      throw new Error('Invalid or missing userId (must be a positive integer)');
     }
     if (!request.jobDescription || typeof request.jobDescription !== 'string') {
       throw new Error('Invalid or missing jobDescription');
@@ -126,8 +132,19 @@ export class AiOrchestratorService {
 
     for (let i = 0; i < experiences.length; i++) {
       const exp = experiences[i];
-      if (!exp.skills || exp.skills.trim().length === 0) {
-        throw new Error(`Experience at index ${i + 1}: skills are missing`);
+
+      // Validate element is an object (catches null, primitives like 42 or null)
+      if (typeof exp !== 'object' || exp === null) {
+        throw new Error(
+          `Experience at index ${i + 1}: invalid entry (must be an object)`,
+        );
+      }
+
+      // Validate skills is a non-empty string
+      if (typeof exp.skills !== 'string' || exp.skills.trim().length === 0) {
+        throw new Error(
+          `Experience at index ${i + 1}: skills must be a non-empty string`,
+        );
       }
     }
   }
@@ -397,7 +414,13 @@ No preamble, no comments, just JSON.`;
       prompt += `Skills: ${exp.skills || 'not specified'}\n`;
       prompt += `Start Date: ${exp.startDate || 'not specified'}\n`;
       prompt += `End Date: ${exp.endDate || 'not specified'}\n`;
-      prompt += `Currently Working: ${exp.currentlyWorking ? 'Yes' : 'No'}\n\n`;
+      prompt += `Currently Working: ${
+        exp.currentlyWorking === true
+          ? 'Yes'
+          : exp.currentlyWorking === false
+            ? 'No'
+            : 'not specified'
+      }\n\n`;
       prompt += '\n';
     }
 
@@ -568,20 +591,23 @@ CRITICAL: Return ONLY valid JSON in this exact format:
         throw new Error('User profile not found');
       }
 
-      // Step 3: Extract experiences from user profile
+      // Step 3: Extract experiences from user profile (with null checks)
       const experiences: UserExperienceDto[] =
-        user.profileDetails && Array.isArray(user.profileDetails.experiences)
+        user.profileDetails &&
+        typeof user.profileDetails === 'object' &&
+        Array.isArray(user.profileDetails.experiences)
           ? (user.profileDetails.experiences as UserExperienceDto[])
           : [];
 
       // Step 4: Validate user profile data (experiences must have skills)
       this.validateUserProfile(experiences);
 
-      // Step 5: Call OpenAI with profile + job description
+      // Step 5: Call OpenAI with profile + job description (using normalized/trimmed version)
       // This combines buildSystemPrompt, buildUserPrompt, and calls OpenAI API
+      const normalizedJobDescription = request.jobDescription.trim();
       const analysisResult = await this.callOpenAiModel(
         experiences,
-        request.jobDescription,
+        normalizedJobDescription,
       );
 
       // Step 6: Return validated result to frontend
