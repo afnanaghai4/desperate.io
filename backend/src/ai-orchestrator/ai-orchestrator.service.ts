@@ -92,6 +92,14 @@ export class AiOrchestratorService {
 
     const jobtrimmed = request.jobDescription.trim();
 
+    // Reject URL-only jobs (URLs must be actual job text, not just links)
+    const urlPattern = /^https?:\/\/.+$/i;
+    if (urlPattern.test(jobtrimmed)) {
+      throw new Error(
+        'Job description cannot be a URL only. Please provide the actual job posting text.',
+      );
+    }
+
     if (jobtrimmed.length < 50) {
       throw new Error(
         'Job description is too short. Please provide a more detailed description.',
@@ -103,13 +111,19 @@ export class AiOrchestratorService {
         'Job description is too long. Please limit to 10,000 characters.',
       );
     }
-    const suspiciousPatterns = /[<>{}|\\]/g;
-    if (suspiciousPatterns.test(jobtrimmed)) {
-      throw new Error('Job description contains invalid characters');
-    }
+    // Removed: Overly aggressive character filter that blocked common job posting characters
+    // like | ("Senior | Lead Engineer"), {} (template placeholders), \\ (Windows paths),
+    // and <> (HTML/XML snippets). Job text validation handled by length checks.
   }
 
   private validateUserProfile(experiences: UserExperienceDto[]): void {
+    // Ensure user has at least one experience entry
+    if (!Array.isArray(experiences) || experiences.length === 0) {
+      throw new Error(
+        'User profile must have at least one experience entry to analyze job fit.',
+      );
+    }
+
     for (let i = 0; i < experiences.length; i++) {
       const exp = experiences[i];
       if (!exp.skills || exp.skills.trim().length === 0) {
@@ -501,8 +515,6 @@ CRITICAL: Return ONLY valid JSON in this exact format:
         const errorMsg = err instanceof Error ? err.message : String(err);
         throw new Error(`Failed to parse OpenAI response as JSON: ${errorMsg}`);
       }
-
-      console.log('OpenAI raw response:', JSON.stringify(parsed, null, 2));
 
       if (!this.validateJobAnalysisResponse(parsed)) {
         console.error(
