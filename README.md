@@ -79,6 +79,29 @@ desperate.io/
 └── README.md             # This file
 ```
 
+## Project Features
+
+### Authentication
+- User registration and login
+- JWT-based authentication
+- Password hashing with bcrypt
+- Protected routes
+
+### Job Management
+- Job listing and filtering
+- Job creation and management
+- Job analysis using AI
+
+### AI Integration
+- OpenAI integration for intelligent analysis
+- Automated project recommendations
+- Job market insights
+
+### User Management
+- User profiles
+- User preferences
+- Recommendation history
+
 ## Prerequisites
 
 - **Node.js**: v18+ (or v20+ recommended)
@@ -261,29 +284,6 @@ npm run lint
 # Type check
 npm run type-check
 ```
-
-## Project Features
-
-### Authentication
-- User registration and login
-- JWT-based authentication
-- Password hashing with bcrypt
-- Protected routes
-
-### Job Management
-- Job listing and filtering
-- Job creation and management
-- Job analysis using AI
-
-### AI Integration
-- OpenAI integration for intelligent analysis
-- Automated project recommendations
-- Job market insights
-
-### User Management
-- User profiles
-- User preferences
-- Recommendation history
 
 ## API Endpoints
 
