@@ -47,6 +47,11 @@ export async function getJobs(skip: number = 0, take: number = 10): Promise<{ jo
         }));
 }
 
+export async function getJobById(jobId: number): Promise<Job> {
+    return apiFetch<{ message: string; data: Job }>(`/jobs/${jobId}`)
+        .then(response => response.data);
+}
+
 export async function analyzeJob(jobId: number): Promise<JobAnalysisResponse> {
     return apiFetch<JobAnalysisResponse>('/analysis/analyze-fit', {
         method: 'POST',
