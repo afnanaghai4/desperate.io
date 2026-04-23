@@ -53,3 +53,9 @@ export async function analyzeJob(jobId: number): Promise<JobAnalysisResponse> {
         body: JSON.stringify({ jobId }),
     });
 }
+
+export async function deleteJob(jobId: number): Promise<void> {
+        return apiFetch<void>(`/jobs/${jobId}`, {
+            method: 'DELETE',
+        });
+}

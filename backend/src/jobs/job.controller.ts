@@ -10,6 +10,8 @@ import {
   UsePipes,
   Get,
   Query,
+  Delete,
+  Param,
 } from '@nestjs/common';
 
 import { Request as expressRequest } from 'express';
@@ -71,6 +73,19 @@ export class JobController {
       hasMore: result.hasMore,
       totalCount: result.totalCount,
       totalPages,
+    };
+  }
+
+  @Delete('/:id')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async deleteJob(
+    @Req() req: AuthRequest,
+    @Param('id') jobId: number,
+  ): Promise<{ message: string }> {
+    await this.jobService.deleteJob(jobId, req.user.userId);
+    return {
+      message: 'Job deleted successfully',
     };
   }
 }

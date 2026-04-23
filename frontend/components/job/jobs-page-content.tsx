@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import JobsList from "./jobs-list";
 import {Job} from "@/types/job";
-import {getJobs} from "@/lib/job-api";
+import {getJobs, deleteJob} from "@/lib/job-api";
 
 
 export default function JobsPageContent() {
@@ -53,7 +53,7 @@ export default function JobsPageContent() {
                 }
                 
                 const errorMsg = err instanceof Error ? err.message : 'Failed to fetch jobs';
-                console.error('❌ Error loading jobs:', errorMsg);
+                console.log(errorMsg);
                 setJobs([]);
                 setTotalPages(1);
                 setIsLoading(false);
@@ -63,7 +63,18 @@ export default function JobsPageContent() {
         fetchJobs();
     }, [skip, currentPage]);
 
-
+    const handleDeleteJob = async (jobId: number) => {
+      try{
+        setIsLoading(true);
+        await deleteJob(jobId);
+        setJobs(jobs.filter(job => job.jobId !== jobId));
+      }catch(err){
+        const errorMsg = err instanceof Error ? err.message : 'Failed to delete job';
+        console.log(errorMsg);
+      }finally{
+        setIsLoading(false);
+      }
+    }
 
 
     return (
@@ -89,17 +100,12 @@ export default function JobsPageContent() {
         onPreviousPage={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
         onNextPage={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
         totalPages={totalPages}
-        onView={(jobId) => {
-            console.log('View job:', jobId);
-            // TODO: Implement view job functionality
+        onView={() => {
+            
         }}
-        onDelete={(jobId) => {
-            console.log('Delete job:', jobId);
-            // TODO: Implement delete job functionality
-        }}
+        onDelete={(jobId) => handleDeleteJob(jobId)}
         />
-      {/* Jobs List Component - Add your logic here */}
-      {/* <JobsList jobs={jobs} currentPage={currentPage} totalPages={totalPages} ... /> */}
+      
     </main>
   );
 }
