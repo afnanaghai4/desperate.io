@@ -61,7 +61,7 @@ export default function Navbar() {
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 mt-2 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
+            <div className="absolute right-0 mt-2 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg z-50">
               <div className="border-b border-gray-100 px-4 py-3">
                 <p className="text-sm font-semibold text-gray-900">My Account</p>
                 <p className="text-xs text-gray-500">Manage your profile</p>

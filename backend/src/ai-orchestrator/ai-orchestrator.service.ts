@@ -177,12 +177,13 @@ export class AiOrchestratorService {
       return false;
     }
 
-    // Validate projectRecommendations (should be 3-4 projects)
-    if (
-      !Array.isArray(obj.projectRecommendations) ||
-      obj.projectRecommendations.length < 3 ||
-      obj.projectRecommendations.length > 4
-    ) {
+    // Validate projectRecommendations (at least 1 if matchPercentage < 100)
+    if (!Array.isArray(obj.projectRecommendations)) {
+      return false;
+    }
+
+    // If not a perfect match, should have at least 1 recommendation
+    if (obj.matchPercentage < 100 && obj.projectRecommendations.length < 1) {
       return false;
     }
 

@@ -15,7 +15,7 @@ export default function JobSubmitButton({
       aria-busy={loading}
       className="w-full rounded-xl bg-black px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {loading ? "Submitting..." : "Analyze Job"}
+      {loading ? "Submitting..." : "Save Job"}
     </button>
   );
 }
