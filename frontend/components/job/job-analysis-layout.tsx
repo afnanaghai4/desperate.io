@@ -9,7 +9,18 @@ import { useState } from "react";
 export default function JobAnalysisLayout() {
   const [analysisResult, setAnalysisResult] = useState<JobAnalysisResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const hasAnalysis = analysisResult || isLoading;
+
+  const handleAnalysisError = (err: string) => {
+    setAnalysisError(err);
+    setIsLoading(false);
+  };
+
+  const handleClearAnalysis = () => {
+    setAnalysisResult(null);
+    setAnalysisError(null);
+  };
 
   return (
     <main className="flex-1 container mx-auto px-4 py-8">
@@ -29,12 +40,11 @@ export default function JobAnalysisLayout() {
           onLoadingStart={() => setIsLoading(true)}
           onAnalysisComplete={(data: JobAnalysisResponse) => {
             setAnalysisResult(data);
+            setAnalysisError(null);
             setIsLoading(false);
           }}
-          onError={(err: string) => {
-            console.error("Error during analysis:", err);
-            setIsLoading(false);
-          }}
+          onAnalysisError={handleAnalysisError}
+          onClearAnalysis={handleClearAnalysis}
           />
         </div>
         
@@ -42,7 +52,7 @@ export default function JobAnalysisLayout() {
         <div className={`transition-all duration-700 ease-in-out ${
           hasAnalysis ? "lg:col-span-2" : "lg:col-span-1"
         }`}>
-          <JobAnalysisPanel analysisResult={analysisResult} isLoading={isLoading} />
+          <JobAnalysisPanel analysisResult={analysisResult} isLoading={isLoading} error={analysisError} />
         </div>
       </div>
     </main>

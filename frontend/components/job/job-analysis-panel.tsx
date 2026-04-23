@@ -6,11 +6,12 @@ import { useState } from 'react';
 type JobAnalysisPanelProps = {
   analysisResult: JobAnalysisResponse | null;
   isLoading: boolean;
+  error?: string | null;
 };
 
 
 
-export default function JobAnalysisPanel({ analysisResult, isLoading }: JobAnalysisPanelProps) {
+export default function JobAnalysisPanel({ analysisResult, isLoading, error }: JobAnalysisPanelProps) {
 
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   
@@ -26,6 +27,12 @@ export default function JobAnalysisPanel({ analysisResult, isLoading }: JobAnaly
           {isLoading ? "Processing..." : "Your personalized insights"}
         </p>
       </div>
+
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 mb-6" role="alert">
+          {error}
+        </div>
+      )}
 
       {isLoading && (
         <div className="relative py-16">
@@ -132,6 +139,7 @@ function ProjectCard({ project, isExpanded, onToggle }: ProjectCardProps) {
     INTERMEDIATE: 'bg-yellow-100 text-yellow-800',
     ADVANCED: 'bg-red-100 text-red-800',
   };
+  const difficultyColor = difficultyColors[project.difficultyLevel] || 'bg-gray-100 text-gray-800';
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden transition-all hover:shadow-md">
@@ -143,7 +151,7 @@ function ProjectCard({ project, isExpanded, onToggle }: ProjectCardProps) {
         <div className="flex-1">
           <h4 className="font-semibold text-gray-900 text-sm">{project.title}</h4>
           <div className="flex items-center gap-2 mt-2">
-            <span className={`text-xs font-medium px-2 py-1 rounded ${difficultyColors[project.difficultyLevel]}`}>
+            <span className={`text-xs font-medium px-2 py-1 rounded ${difficultyColor}`}>
               {project.difficultyLevel}
             </span>
             <span className="text-xs text-gray-600">⏱️ {project.timeline}</span>
@@ -155,7 +163,7 @@ function ProjectCard({ project, isExpanded, onToggle }: ProjectCardProps) {
         </svg>
       </button>
 
-      <div className={`px-4 bg-white space-y-4 transition-all duration-700 ease-in-out overflow-hidden ${isExpanded ? 'border-t border-gray-200 py-4 opacity-100 max-h-full visible' : 'py-0 opacity-0 max-h-0 invisible'}`}>
+      <div className={`px-4 bg-white space-y-4 transition-all duration-700 ease-in-out overflow-hidden ${isExpanded ? 'border-t border-gray-200 py-4 opacity-100 max-h-[2000px] visible' : 'py-0 opacity-0 max-h-0 invisible'}`}>
           <div>
             <h5 className="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-2">Description</h5>
             <p className="text-sm text-gray-700">{project.description}</p>
@@ -226,7 +234,7 @@ function MilestoneItem({ milestone }: MilestoneItemProps) {
         </svg>
       </button>
 
-      <div className={`border-t border-gray-200 px-3 py-2 bg-white space-y-2 text-xs transition-all duration-700 ease-in-out overflow-hidden ${isExpanded ? 'opacity-100 max-h-96 visible' : 'opacity-0 max-h-0 invisible'}`}>
+      <div className={`border-t border-gray-200 px-3 py-2 bg-white space-y-2 text-xs transition-all duration-700 ease-in-out overflow-hidden ${isExpanded ? 'opacity-100 max-h-[1000px] visible' : 'opacity-0 max-h-0 invisible'}`}>
           <div>
             <p className="font-semibold text-gray-900 mb-1">Tasks:</p>
             <ul className="space-y-1 ml-2">

@@ -13,10 +13,11 @@ import JobAnalyzeButton from "./job-analyze-button";
 interface JobFormProps {
   onLoadingStart: () => void;
   onAnalysisComplete: (data: JobAnalysisResponse) => void;
-  onError: (err: string) => void;
+  onAnalysisError: (err: string) => void;
+  onClearAnalysis: () => void;
 }
 
-export default function JobForm({onLoadingStart, onAnalysisComplete, onError}: JobFormProps) {
+export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisError, onClearAnalysis}: JobFormProps) {
 
   const [inputType, setInputType] = useState<InputType>("TEXT");
   const [companyName, setCompanyName] = useState("");
@@ -96,12 +97,10 @@ export default function JobForm({onLoadingStart, onAnalysisComplete, onError}: J
       const response = await createJob(payload);
       setResult(response.data);
       setIsJobSaved(true);
-      console.log("✅ Job saved:", response.data);
     
     } catch(err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred.";
       setError(errorMessage);
-      console.error("❌ Error saving job:", errorMessage);
     } finally {
       setLoading(false);
     }
@@ -110,20 +109,20 @@ export default function JobForm({onLoadingStart, onAnalysisComplete, onError}: J
 
   const handleAnalyzeClick = async () => {
     if(loading || !result){
-      console.warn("⚠️ Cannot analyze: loading=", loading, "result=", result);
       return;
     }
-    console.log("📊 Starting analysis for jobId:", result.jobId);
+    setLoading(true);
     onLoadingStart();
     try {
       const analysis = await analyzeJob(result.jobId);
-      console.log("✅ Analysis received:", analysis);
       onAnalysisComplete(analysis);
     } catch(err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred during analysis.";
-      console.error("❌ Analysis error:", errorMessage);
-      onError(errorMessage);
-    } 
+      setError(errorMessage);
+      onAnalysisError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   }
   
   const handleReset = () => {
@@ -135,7 +134,7 @@ export default function JobForm({onLoadingStart, onAnalysisComplete, onError}: J
     setIsJobSaved(false);
     setResult(null);
     setError(null);
-    console.log("🔄 Form reset");
+    onClearAnalysis();
   }
 
   return (
