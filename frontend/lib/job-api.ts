@@ -1,6 +1,7 @@
 import { apiFetch } from "./api";
 
 import {Job, InputType} from "@/types/job";
+import { JobAnalysisResponse } from "@/types/job-analysis";
 
 
 export interface CreateJobPayload {
@@ -44,4 +45,11 @@ export async function getJobs(skip: number = 0, take: number = 10): Promise<{ jo
             totalCount: response.totalCount,
             totalPages: response.totalPages,
         }));
+}
+
+export async function analyzeJob(jobId: number): Promise<JobAnalysisResponse> {
+    return apiFetch<JobAnalysisResponse>('/analysis/analyze-fit', {
+        method: 'POST',
+        body: JSON.stringify({ jobId }),
+    });
 }
