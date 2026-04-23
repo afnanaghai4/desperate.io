@@ -48,4 +48,12 @@ export class JobService {
       totalCount,
     };
   }
+
+  async deleteJob(jobId: number, userId: number): Promise<void> {
+    const deleteResult = await this.jobRepository.delete({ jobId, userId });
+
+    if (deleteResult.affected === 0) {
+      throw new Error('Job not found or not authorized to delete');
+    }
+  }
 }
