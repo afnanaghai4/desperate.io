@@ -49,6 +49,12 @@ export class JobService {
     };
   }
 
+  async getJobById(jobId: number, userId: number): Promise<Job | null> {
+    return this.jobRepository.findOne({
+      where: { jobId, userId },
+    });
+  }
+
   async deleteJob(jobId: number, userId: number): Promise<void> {
     const deleteResult = await this.jobRepository.delete({ jobId, userId });
 

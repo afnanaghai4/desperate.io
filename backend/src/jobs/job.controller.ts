@@ -12,6 +12,7 @@ import {
   Query,
   Delete,
   Param,
+  NotFoundException,
 } from '@nestjs/common';
 
 import { Request as expressRequest } from 'express';
@@ -73,6 +74,29 @@ export class JobController {
       hasMore: result.hasMore,
       totalCount: result.totalCount,
       totalPages,
+    };
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async getJobById(
+    @Request() req: AuthRequest,
+    @Param('id') jobId: number,
+  ): Promise<{ message: string; data: Job }> {
+    
+    const result = await this.jobService.getJobById(
+      jobId,
+      req.user.userId
+    );
+
+    if (!result) {
+      throw new NotFoundException('Job not found or not authorized to view');
+    }
+
+    return {
+      message: 'Job retrieved successfully',
+      data: result,
     };
   }
 
