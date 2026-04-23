@@ -84,11 +84,7 @@ export class JobController {
     @Request() req: AuthRequest,
     @Param('id') jobId: number,
   ): Promise<{ message: string; data: Job }> {
-    
-    const result = await this.jobService.getJobById(
-      jobId,
-      req.user.userId
-    );
+    const result = await this.jobService.getJobById(jobId, req.user.userId);
 
     if (!result) {
       throw new NotFoundException('Job not found or not authorized to view');
