@@ -48,22 +48,50 @@ desperate.io/
 │   │   ├── project-recommendation/  # AI-powered recommendations
 │   │   ├── ai-orchestrator/  # OpenAI integration
 │   │   ├── health/         # Health check endpoints
+│   │   │   ├── health.controller.ts
+│   │   │   ├── health.service.ts
+│   │   │   └── health.module.ts
 │   │   ├── entities/       # TypeORM entities
+│   │   │   ├── user.entity.ts
+│   │   │   ├── job.entity.ts
+│   │   │   ├── analysis.entity.ts
+│   │   │   └── project-recommendation.entity.ts
 │   │   ├── common/         # Shared utilities and types
+│   │   │   ├── constants/  # App constants
+│   │   │   ├── enums/      # Shared enums
+│   │   │   └── types/      # Shared type definitions
 │   │   ├── migrations/     # Database migrations
-│   │   └── app.module.ts   # Root module
+│   │   │   └── [timestamp]-*.ts
+│   │   ├── app.controller.ts
+│   │   ├── app.module.ts
+│   │   └── main.ts
 │   ├── test/               # E2E tests
+│   │   ├── jest-e2e.json
+│   │   └── app.e2e-spec.ts
 │   ├── package.json
 │   ├── tsconfig.json
+│   ├── tsconfig.build.json
+│   ├── nest-cli.json
 │   └── Dockerfile
 │
 ├── frontend/               # Next.js frontend application
-│   ├── app/               # App router pages
+│   ├── app/               # Next.js app router pages
+│   │   ├── layout.tsx     # Root layout with providers
+│   │   ├── page.tsx       # Homepage
+│   │   ├── globals.css    # Global styles
 │   │   ├── dashboard/     # Dashboard page
-│   │   ├── jobs/          # Jobs listing page
+│   │   ├── jobs/          # Jobs management pages
+│   │   │   ├── page.tsx   # Job listing
+│   │   │   ├── create/    # Job creation
+│   │   │   │   └── page.tsx
+│   │   │   └── [id]/      # Job detail/analysis
+│   │   │       └── page.tsx
 │   │   ├── login/         # Login page
+│   │   │   └── page.tsx
 │   │   ├── signup/        # Registration page
+│   │   │   └── page.tsx
 │   │   └── profile/       # User profile page
+│   │       └── page.tsx
 │   ├── components/        # Reusable React components
 │   │   ├── auth/          # Authentication components
 │   │   ├── dashboard/     # Dashboard components
@@ -290,22 +318,20 @@ npm run type-check
 ### Authentication
 - `POST /auth/register` - Register a new user
 - `POST /auth/login` - Login user
+- `GET /auth/me` - Get authenticated user profile
 
 ### Users
 - `GET /users/profile` - Get user profile
 - `PUT /users/profile` - Update user profile
 
 ### Jobs
-- `GET /jobs` - List all jobs
+- `GET /jobs` - List all jobs for authenticated user (paginated with `?skip=0&take=10`)
 - `POST /jobs` - Create a new job
-- `GET /jobs/:id` - Get job details
+- `GET /jobs/:id` - Get job details by ID
+- `DELETE /jobs/:id` - Delete a job
 
 ### Analysis
-- `POST /analysis` - Analyze job posting
-
-### Project Recommendations
-- `GET /recommendations` - Get AI recommendations
-- `POST /recommendations` - Generate recommendations
+- `POST /analysis/analyze-fit` - Analyze job fit using AI (`{ "jobId": number }`)
 
 ### Health
 - `GET /health` - Health check endpoint
