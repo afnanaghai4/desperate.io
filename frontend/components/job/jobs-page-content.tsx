@@ -5,6 +5,7 @@ import Link from "next/link";
 import JobsList from "./jobs-list";
 import {Job} from "@/types/job";
 import {getJobs, deleteJob} from "@/lib/job-api";
+import { useRouter } from "next/navigation";
 
 
 export default function JobsPageContent() {
@@ -16,6 +17,11 @@ export default function JobsPageContent() {
     const pageSize = 6; 
     const skip = (currentPage - 1) * pageSize;
     const abortControllerRef = useRef<AbortController | null>(null);
+    const router = useRouter();
+
+    const handleViewJob = (jobId: number) => {
+    router.push(`/jobs/${jobId}`);
+    };
 
     useEffect(() => {
         // Cancel previous request if still pending
@@ -100,9 +106,7 @@ export default function JobsPageContent() {
         onPreviousPage={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
         onNextPage={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
         totalPages={totalPages}
-        onView={() => {
-            
-        }}
+        onView={handleViewJob}
         onDelete={(jobId) => handleDeleteJob(jobId)}
         />
       

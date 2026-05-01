@@ -1,7 +1,8 @@
 "use client";
 
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { InputType, Job } from "@/types/job";
 import { analyzeJob, createJob } from "@/lib/job-api";
 import { JobAnalysisResponse } from "@/types/job-analysis";
@@ -15,9 +16,12 @@ interface JobFormProps {
   onAnalysisComplete: (data: JobAnalysisResponse) => void;
   onAnalysisError: (err: string) => void;
   onClearAnalysis: () => void;
+  mode: "CREATE" | "ANALYZE";
+  jobData?: Job
 }
 
-export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisError, onClearAnalysis}: JobFormProps) {
+export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisError, onClearAnalysis, mode, jobData}: JobFormProps) {
+  const router = useRouter();
 
   const [inputType, setInputType] = useState<InputType>("TEXT");
   const [companyName, setCompanyName] = useState("");
@@ -29,6 +33,23 @@ export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisE
   const [result, setResult] = useState<Job | null>(null);
   const [isJobSaved, setIsJobSaved] = useState(false);
   
+  
+  useEffect(() => {
+    if(mode === "ANALYZE" && jobData){
+      setCompanyName(jobData.companyName || "");
+      setJobTitle(jobData.jobTitle || "");
+      if(jobData.jobText){
+        setInputType("TEXT");
+        setJobText(jobData.jobText);
+      } else if(jobData.jobLink){
+        setInputType("LINK");
+        setJobLink(jobData.jobLink);
+      }
+    }
+  }, [mode, jobData])
+
+
+
   const conditionalresetFields = (type: InputType) => {
     if (type === 'TEXT') {
       setJobLink("");
@@ -108,16 +129,21 @@ export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisE
 
 
   const handleAnalyzeClick = async () => {
-    if(loading || !result){
+    const jobId = mode === "CREATE" ? result?.jobId : jobData?.jobId;
+    if(loading || !jobId){
       return;
     }
     setLoading(true);
     onLoadingStart();
     try {
-      const analysis = await analyzeJob(result.jobId);
+      const analysis = await analyzeJob(jobId);
+      console.log('analyzeJob returned:', analysis);
+      console.log('matchPercentage:', analysis.matchPercentage);
+      console.log('projectRecommendations:', analysis.projectRecommendations);
       onAnalysisComplete(analysis);
     } catch(err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred during analysis.";
+      console.error('Analysis error:', errorMessage);
       setError(errorMessage);
       onAnalysisError(errorMessage);
     } finally {
@@ -126,15 +152,19 @@ export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisE
   }
   
   const handleReset = () => {
-    setCompanyName("");
-    setJobTitle("");
-    setJobLink("");
-    setJobText("");
-    setInputType("TEXT");
-    setIsJobSaved(false);
-    setResult(null);
-    setError(null);
-    onClearAnalysis();
+    if (mode === "ANALYZE") {
+      router.push('/jobs');
+    } else {
+      setCompanyName("");
+      setJobTitle("");
+      setJobLink("");
+      setJobText("");
+      setInputType("TEXT");
+      setIsJobSaved(false);
+      setResult(null);
+      setError(null);
+      onClearAnalysis();
+    }
   }
 
   return (
@@ -201,25 +231,39 @@ export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisE
           </div>
         )}
 
-        <div className="flex gap-3 pt-2">
-          {!isJobSaved ? (
-            <>
-              <JobSubmitButton loading={loading} />
-            </>
-          ) : (
-            <>
-              <JobAnalyzeButton onClick={handleAnalyzeClick} loading={loading} />
-              <button
-                type="button"
-                onClick={handleReset}
-                disabled={loading}
-                className="flex-1 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition disabled:cursor-not-allowed"
-              >
-                {loading ? "Analyzing..." : "New Job"}
-              </button>
-            </>
-          )}
-        </div>
+        {mode === "CREATE" && !isJobSaved && (
+          <div className="flex gap-3 pt-2">
+            <JobSubmitButton loading={loading} />
+          </div>
+        )}
+
+        {mode === "CREATE" && isJobSaved && (
+          <div className="flex gap-3 pt-2">
+            <JobAnalyzeButton onClick={handleAnalyzeClick} loading={loading} />
+            <button
+              type="button"
+              onClick={handleReset}
+              disabled={loading}
+              className="flex-1 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition disabled:cursor-not-allowed"
+            >
+              {loading ? "Analyzing..." : "New Job"}
+            </button>
+          </div>
+        )}
+
+        {mode === "ANALYZE" && (
+          <div className="flex gap-3 pt-2">
+            <JobAnalyzeButton onClick={handleAnalyzeClick} loading={loading} disabled={true} />
+            <button
+              type="button"
+              onClick={handleReset}
+              disabled={loading}
+              className="flex-1 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition disabled:cursor-not-allowed"
+            >
+              {loading ? "Analyzing..." : "Go Back"}
+            </button>
+          </div>
+        )}
       </div>
     </form>
   );

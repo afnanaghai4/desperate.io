@@ -27,6 +27,11 @@ export interface CreateJobResponse {
         };
     }
 
+export interface GetJobResponse {
+    message: string;
+    data: Job;
+    analysis?: JobAnalysisResponse | null;
+}
 
 export async function createJob(
     payload: CreateJobPayload
@@ -47,16 +52,17 @@ export async function getJobs(skip: number = 0, take: number = 10): Promise<{ jo
         }));
 }
 
-export async function getJobById(jobId: number): Promise<Job> {
-    return apiFetch<{ message: string; data: Job }>(`/jobs/${jobId}`)
-        .then(response => response.data);
+export async function getJobById(jobId: number): Promise<GetJobResponse> {
+    return apiFetch<GetJobResponse>(`/jobs/${jobId}`);
 }
 
 export async function analyzeJob(jobId: number): Promise<JobAnalysisResponse> {
-    return apiFetch<JobAnalysisResponse>('/analysis/analyze-fit', {
+    const response = await apiFetch<{ message: string; data: JobAnalysisResponse }>('/analysis/analyze-fit', {
         method: 'POST',
         body: JSON.stringify({ jobId }),
     });
+    
+    return response.data;
 }
 
 export async function deleteJob(jobId: number): Promise<void> {

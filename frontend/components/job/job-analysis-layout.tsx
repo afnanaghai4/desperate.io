@@ -4,13 +4,21 @@ import { JobAnalysisResponse } from "@/types/job-analysis";
 import JobForm from './job-form';
 import JobAnalysisPanel from './job-analysis-panel';
 import { useState } from "react";
+import { Job } from "@/types/job";
 
 
-export default function JobAnalysisLayout() {
-  const [analysisResult, setAnalysisResult] = useState<JobAnalysisResponse | null>(null);
+interface JobLayoutProps {
+  mode: "CREATE" | "ANALYZE";
+  jobData?: Job;
+  analysisData?: JobAnalysisResponse;
+}
+
+export default function JobAnalysisLayout({ mode, jobData, analysisData }: JobLayoutProps) {
+  const [analysisResult, setAnalysisResult] = useState<JobAnalysisResponse | null>(analysisData || null);
   const [isLoading, setIsLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const hasAnalysis = analysisResult || isLoading;
+  
 
   const handleAnalysisError = (err: string) => {
     setAnalysisError(err);
@@ -37,14 +45,17 @@ export default function JobAnalysisLayout() {
         {/* Left side - Form (fixed width during animation) */}
         <div className="transition-all duration-700 ease-in-out">
           <JobForm 
-          onLoadingStart={() => setIsLoading(true)}
-          onAnalysisComplete={(data: JobAnalysisResponse) => {
-            setAnalysisResult(data);
-            setAnalysisError(null);
-            setIsLoading(false);
-          }}
-          onAnalysisError={handleAnalysisError}
-          onClearAnalysis={handleClearAnalysis}
+            onLoadingStart={() => setIsLoading(true)}
+            onAnalysisComplete={(data: JobAnalysisResponse) => {
+              console.log('Analysis complete, received data:', data);
+              setAnalysisResult(data);
+              setAnalysisError(null);
+              setIsLoading(false);
+            }}
+            onAnalysisError={handleAnalysisError}
+            onClearAnalysis={handleClearAnalysis}
+            mode={mode}
+            jobData={jobData}
           />
         </div>
         

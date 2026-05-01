@@ -22,6 +22,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Job } from 'src/entities/job.entity';
 import { JobService } from './job.service';
 import { ValidateJobInputPipe } from './dto/pipes/validate-job-input.pipe';
+import { AnalysisService } from '../analysis/analysis.service';
+import {
+  JobAnalysisResponse,
+  ProjectRecommendationResponse,
+} from '../ai-orchestrator/ai-orchestrator.service';
 
 interface AuthRequest extends expressRequest {
   user: { userId: number; email: string };
@@ -29,7 +34,10 @@ interface AuthRequest extends expressRequest {
 
 @Controller('jobs')
 export class JobController {
-  constructor(private readonly jobService: JobService) {}
+  constructor(
+    private readonly jobService: JobService,
+    private readonly analysisService: AnalysisService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -83,16 +91,41 @@ export class JobController {
   async getJobById(
     @Request() req: AuthRequest,
     @Param('id') jobId: number,
-  ): Promise<{ message: string; data: Job }> {
+  ): Promise<{
+    message: string;
+    data: Job;
+    analysis: JobAnalysisResponse | null;
+  }> {
     const result = await this.jobService.getJobById(jobId, req.user.userId);
-
+    const analysisEntity = await this.analysisService.getAnalysisByJobId(jobId);
     if (!result) {
       throw new NotFoundException('Job not found or not authorized to view');
     }
 
+    // Map Analysis entity to JobAnalysisResponse format
+    let analysisResponse: JobAnalysisResponse | null = null;
+    if (analysisEntity) {
+      analysisResponse = {
+        matchPercentage: analysisEntity.baselineInterviewChancePercent,
+        extractedKeywords: {
+          jobKeywords: [],
+          profileKeywords: [],
+          matchedKeywords: [],
+        },
+        analysis: {
+          strengths: analysisEntity.strongPoints || [],
+          weaknesses: analysisEntity.weakPoints || [],
+        },
+        projectRecommendations:
+          (analysisEntity.projectRecommendations as unknown as ProjectRecommendationResponse[]) ||
+          [],
+      };
+    }
+
     return {
-      message: 'Job retrieved successfully',
+      message: 'Job and possible analysis retrieved successfully',
       data: result,
+      analysis: analysisResponse || null,
     };
   }
 
