@@ -13,7 +13,12 @@ interface JobPageProps {
 export default async function JobsPage({ params }: JobPageProps) {
 
   const { id } = await params;
-  const jobId  = parseInt(id);
+  const jobId = parseInt(id);
+  
+  // Validate jobId is a valid number
+  if (isNaN(jobId)) {
+    notFound();
+  }
   
   let data;
   try {

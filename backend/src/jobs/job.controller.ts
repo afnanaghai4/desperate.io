@@ -27,6 +27,7 @@ import {
   JobAnalysisResponse,
   ProjectRecommendationResponse,
 } from '../ai-orchestrator/ai-orchestrator.service';
+import { ProjectRecommendation } from 'src/entities/project-recommendation.entity';
 
 interface AuthRequest extends expressRequest {
   user: { userId: number; email: string };
@@ -38,6 +39,24 @@ export class JobController {
     private readonly jobService: JobService,
     private readonly analysisService: AnalysisService,
   ) {}
+
+  /**
+   * Maps ProjectRecommendation entity to ProjectRecommendationResponse format
+   */
+  private mapProjectRecommendationToResponse(
+    entity: ProjectRecommendation,
+  ): ProjectRecommendationResponse {
+    return {
+      title: entity.title,
+      description: entity.description,
+      difficultyLevel: entity.difficultyLevel,
+      timeline: entity.timeline,
+      skills: entity.skills || [],
+      milestones: entity.milestones || [],
+      cvPoints: entity.cvPoints || [],
+      updatedInterviewPercentage: entity.improvedInterviewChancePercent,
+    };
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -116,9 +135,9 @@ export class JobController {
           strengths: analysisEntity.strongPoints || [],
           weaknesses: analysisEntity.weakPoints || [],
         },
-        projectRecommendations:
-          (analysisEntity.projectRecommendations as unknown as ProjectRecommendationResponse[]) ||
-          [],
+        projectRecommendations: (
+          analysisEntity.projectRecommendations || []
+        ).map((rec) => this.mapProjectRecommendationToResponse(rec)),
       };
     }
 

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Analysis } from 'src/entities/analysis.entity';
+import { ProjectRecommendation } from 'src/entities/project-recommendation.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JobAnalysisResponse } from '../ai-orchestrator/ai-orchestrator.service';
@@ -9,6 +10,8 @@ export class AnalysisService {
   constructor(
     @InjectRepository(Analysis)
     private readonly analysisRepository: Repository<Analysis>,
+    @InjectRepository(ProjectRecommendation)
+    private readonly projectRecommendationRepository: Repository<ProjectRecommendation>,
   ) {}
 
   async getAnalysisByJobId(jobId: number): Promise<Analysis | null> {
@@ -46,6 +49,40 @@ export class AnalysisService {
         analysisResponse.matchPercentage;
     }
 
-    return this.analysisRepository.save(analysis);
+    // Save or update the analysis entity first
+    const savedAnalysis = await this.analysisRepository.save(analysis);
+
+    // Delete existing project recommendations if updating
+    if (analysis.analysisId) {
+      await this.projectRecommendationRepository.delete({
+        analysisId: analysis.analysisId,
+      });
+    }
+
+    // Create and save new project recommendations
+    if (
+      analysisResponse.projectRecommendations &&
+      analysisResponse.projectRecommendations.length > 0
+    ) {
+      const projectRecommendations =
+        analysisResponse.projectRecommendations.map((rec, index) =>
+          this.projectRecommendationRepository.create({
+            analysisId: savedAnalysis.analysisId,
+            title: rec.title,
+            description: rec.description,
+            difficultyLevel: rec.difficultyLevel,
+            timeline: rec.timeline,
+            skills: rec.skills,
+            milestones: rec.milestones,
+            cvPoints: rec.cvPoints,
+            improvedInterviewChancePercent: rec.updatedInterviewPercentage,
+            displayOrder: index,
+          }),
+        );
+
+      await this.projectRecommendationRepository.save(projectRecommendations);
+    }
+
+    return savedAnalysis;
   }
 }

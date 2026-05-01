@@ -14,19 +14,6 @@ type JobAnalysisPanelProps = {
 export default function JobAnalysisPanel({ analysisResult, isLoading, error }: JobAnalysisPanelProps) {
 
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
-  
-  console.log('JobAnalysisPanel received:', {
-    analysisResult,
-    isLoading,
-    error,
-    hasData: !!analysisResult,
-    matchPercentage: analysisResult?.matchPercentage,
-    projectCount: analysisResult?.projectRecommendations?.length,
-  });
-
-  if (analysisResult) {
-    console.log('Full analysisResult structure:', JSON.stringify(analysisResult, null, 2));
-  }
 
 
   

@@ -8,6 +8,12 @@ import {
 import { Analysis } from './analysis.entity';
 import { DifficultyLevel } from 'src/common/enums/difficulty-level.enum';
 
+export interface Milestone {
+  week: string;
+  tasks: string[];
+  deliverable: string;
+}
+
 @Entity('project_recommendations')
 export class ProjectRecommendation {
   @PrimaryGeneratedColumn()
@@ -33,6 +39,15 @@ export class ProjectRecommendation {
 
   @Column({ type: 'jsonb', default: [] })
   techStack: string[];
+
+  @Column({ type: 'jsonb', default: [] })
+  skills: string[];
+
+  @Column({ type: 'jsonb', default: [] })
+  milestones: Milestone[];
+
+  @Column({ type: 'jsonb', default: [] })
+  cvPoints: string[];
 
   @Column({ type: 'float' })
   improvedInterviewChancePercent: number;
