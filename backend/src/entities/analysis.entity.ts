@@ -57,6 +57,13 @@ export class Analysis {
   @Column({ type: 'varchar', nullable: true })
   domain: string | null;
 
+  @Column({ type: 'jsonb', nullable: true })
+  extractedKeywords: {
+    jobKeywords: string[];
+    profileKeywords: string[];
+    matchedKeywords: string[];
+  } | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -115,18 +115,21 @@ export class JobController {
     data: Job;
     analysis: JobAnalysisResponse | null;
   }> {
+    // Authorize first before loading any analysis
     const result = await this.jobService.getJobById(jobId, req.user.userId);
-    const analysisEntity = await this.analysisService.getAnalysisByJobId(jobId);
     if (!result) {
       throw new NotFoundException('Job not found or not authorized to view');
     }
+
+    // Only load analysis after authorization is confirmed
+    const analysisEntity = await this.analysisService.getAnalysisByJobId(jobId);
 
     // Map Analysis entity to JobAnalysisResponse format
     let analysisResponse: JobAnalysisResponse | null = null;
     if (analysisEntity) {
       analysisResponse = {
         matchPercentage: analysisEntity.baselineInterviewChancePercent,
-        extractedKeywords: {
+        extractedKeywords: analysisEntity.extractedKeywords || {
           jobKeywords: [],
           profileKeywords: [],
           matchedKeywords: [],

@@ -2,7 +2,7 @@ import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import JobAnalysisLayout from "@/components/job/job-analysis-layout";
 import ProtectedRoute from "@/components/auth/protected-route";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 
 
@@ -33,8 +33,25 @@ export default async function JobsPage({ params }: JobPageProps) {
       },
     });
 
-    if (!response.ok) {
+    // Handle auth failures - redirect to login
+    if (response.status === 401) {
+      redirect('/login');
+    }
+
+    // Handle authorization failures - forbidden
+    if (response.status === 403) {
       notFound();
+    }
+
+    // Handle not found
+    if (response.status === 404) {
+      notFound();
+    }
+
+    // Handle server errors - log and show error state
+    if (!response.ok) {
+      console.error(`API error: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to fetch job: ${response.statusText}`);
     }
 
     data = await response.json();
@@ -42,8 +59,10 @@ export default async function JobsPage({ params }: JobPageProps) {
       notFound();
     }
   } catch (err) {
+    // Log actual errors but don't mask them as 404
     console.error('Error fetching job:', err);
-    notFound();
+    // Re-throw to let Next.js error boundary handle it
+    throw err;
   }
 
   return (
