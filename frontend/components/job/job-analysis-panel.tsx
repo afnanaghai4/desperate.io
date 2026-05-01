@@ -14,7 +14,6 @@ type JobAnalysisPanelProps = {
 export default function JobAnalysisPanel({ analysisResult, isLoading, error }: JobAnalysisPanelProps) {
 
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
-  
 
 
   

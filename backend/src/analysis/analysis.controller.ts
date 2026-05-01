@@ -18,6 +18,7 @@ import {
 } from '../ai-orchestrator/ai-orchestrator.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Job } from '../entities/job.entity';
+import { AnalysisService } from './analysis.service';
 
 interface AuthRequest extends ExpressRequest {
   user: { userId: number; email: string };
@@ -27,6 +28,7 @@ interface AuthRequest extends ExpressRequest {
 export class AnalysisController {
   constructor(
     private aiOrchestratorService: AiOrchestratorService,
+    private analysisService: AnalysisService,
     @InjectRepository(Job)
     private jobRepository: Repository<Job>,
   ) {}
@@ -36,7 +38,7 @@ export class AnalysisController {
   async analyzeFit(
     @Body() body: { jobId: number },
     @Request() req: AuthRequest,
-  ): Promise<JobAnalysisResponse> {
+  ): Promise<{ message: string; data: JobAnalysisResponse }> {
     if (!body.jobId) {
       throw new BadRequestException('jobId is required');
     }
@@ -70,6 +72,20 @@ export class AnalysisController {
       jobDescription,
     };
 
-    return this.aiOrchestratorService.analyzeJobFit(request);
+    const analysisResponse =
+      await this.aiOrchestratorService.analyzeJobFit(request);
+
+    // Save the analysis to the database
+    await this.analysisService.saveAnalysis(
+      body.jobId,
+      job.jobTitle,
+      job.companyName,
+      analysisResponse,
+    );
+
+    return {
+      message: 'Job analysis completed successfully',
+      data: analysisResponse,
+    };
   }
 }

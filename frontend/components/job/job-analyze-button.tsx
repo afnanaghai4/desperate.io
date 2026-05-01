@@ -2,18 +2,20 @@
 
 type Props = {
   loading?: boolean;
+  disabled?: boolean;
   onClick: () => void;
 };
 
 export default function JobAnalyzeButton({
   loading = false,
+  disabled = false,
   onClick,
 }: Props) {
 
   return (
     <button
       type="button"
-      disabled={loading}
+      disabled={loading || disabled}
       onClick={onClick}
       aria-label={loading ? "Analyzing job description" : "Analyze job description"}
       aria-busy={loading}
