@@ -92,7 +92,10 @@ export class AnalysisService {
             }),
           );
 
-        await queryRunner.manager.save(ProjectRecommendation, projectRecommendations);
+        await queryRunner.manager.save(
+          ProjectRecommendation,
+          projectRecommendations,
+        );
       }
 
       await queryRunner.commitTransaction();
