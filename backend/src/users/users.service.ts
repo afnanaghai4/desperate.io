@@ -1,8 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
 import { UpdateProfileDto } from './dto/update-user-profile.dto';
+import { CreateProfileDto } from './dto/create-user-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -72,5 +77,24 @@ export class UsersService {
       throw new NotFoundException('User not found after update');
     }
     return updatedUser;
+  }
+
+  async createProfile(
+    userId: number,
+    createProfileDto: CreateProfileDto,
+  ): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: { userId },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (user.profileDetails) {
+      throw new BadRequestException(
+        'Profile already exists. Use PATCH to update.',
+      );
+    }
+    user.profileDetails = createProfileDto;
+    return this.usersRepository.save(user);
   }
 }
