@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../entities/user.entity';
@@ -84,6 +88,11 @@ export class UsersService {
     });
     if (!user) {
       throw new NotFoundException('User not found');
+    }
+    if (user.profileDetails) {
+      throw new BadRequestException(
+        'Profile already exists. Use PATCH to update.',
+      );
     }
     user.profileDetails = createProfileDto;
     return this.usersRepository.save(user);

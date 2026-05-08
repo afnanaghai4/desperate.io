@@ -69,14 +69,7 @@ export class UsersController {
   async createProfile(
     @Request() req: AuthRequest,
     @Body() createProfileDto: CreateProfileDto,
-  ): Promise<{ message: string; data: User }> {
-    const createProfile = await this.usersService.createProfile(
-      req.user.userId,
-      createProfileDto,
-    );
-    return {
-      message: 'Profile created successfully',
-      data: createProfile,
-    };
+  ): Promise<User> {
+    return this.usersService.createProfile(req.user.userId, createProfileDto);
   }
 }
