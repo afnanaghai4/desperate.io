@@ -24,8 +24,28 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() RegisterDto: RegisterDto) {
-    return this.authService.register(RegisterDto);
+  async register(@Body() RegisterDto: RegisterDto, @Res() res: Response) {
+    const result = await this.authService.register(RegisterDto);
+
+    // Set HTTP-only cookie with the JWT token (same as login)
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie('accessToken', result.data.accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'strict' : 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    // Return response without token in body (it's in the secure cookie)
+    const includeTokenInResponse = process.env.NODE_ENV !== 'production';
+    return res.json({
+      message: result.message,
+      data: {
+        user: result.data.user,
+        ...(includeTokenInResponse && { accessToken: result.data.accessToken }),
+      },
+    });
   }
 
   @Post('login')

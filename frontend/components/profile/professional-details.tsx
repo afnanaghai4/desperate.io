@@ -11,6 +11,7 @@ interface ProfessionalDetailsProps {
     onUpdate: () => void;
     onGoBack: () => void;
     error?: string;
+    buttonText?: string;
 }
 
 export default function ProfessionalDetails({
@@ -19,6 +20,7 @@ export default function ProfessionalDetails({
     onUpdate,
     onGoBack,
     error,
+    buttonText = 'Update',
 }: ProfessionalDetailsProps) {
   const handleFieldChange = (
     id: string,
@@ -77,7 +79,7 @@ export default function ProfessionalDetails({
         </div>
 
         <Button variant="primary" onClick={onUpdate}>
-          Update
+          {buttonText}
         </Button>
       </div>
 

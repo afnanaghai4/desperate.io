@@ -37,9 +37,18 @@ export class AuthService {
       email,
     });
 
+    // Generate JWT token for auto-login after signup
+    const payload = {
+      sub: user.userId,
+      email: user.email,
+      username: user.username,
+    };
+    const accessToken = await this.jwtService.signAsync(payload);
+
     return {
       message: 'User registered successfully',
       data: {
+        accessToken,
         user: {
           id: user.userId,
           email: user.email,
@@ -66,6 +75,7 @@ export class AuthService {
     const payload = {
       sub: user.userId,
       email: user.email,
+      username: user.username,
     };
 
     const accessToken = await this.jwtService.signAsync(payload);

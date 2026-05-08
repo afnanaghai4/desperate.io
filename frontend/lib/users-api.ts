@@ -43,6 +43,15 @@ export interface UpdateProfileResponse {
   };
 }
 
+export interface User {
+  userId: number;
+  username: string;
+  email: string;
+  role: string;
+  profileDetails: UserProfile | null;
+  createdAt: Date;
+}
+
 export async function getProfile(): Promise<GetProfileResponse> {
   return apiFetch<GetProfileResponse>('/users/profile');
 }
@@ -52,6 +61,13 @@ export async function updateProfile(
 ): Promise<UpdateProfileResponse> {
   return apiFetch<UpdateProfileResponse>('/users/profile', {
     method: 'PATCH',
+    body: JSON.stringify(profileData),
+  });
+}
+
+export async function createProfile(profileData: UserProfile): Promise<User> {
+  return apiFetch<User>('/users/profile', {
+    method: 'POST',
     body: JSON.stringify(profileData),
   });
 }
