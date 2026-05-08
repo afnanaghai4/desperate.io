@@ -8,10 +8,13 @@ import {
   HttpCode,
   HttpStatus,
   NotFoundException,
+  Post,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from './users.service';
 import { UpdateProfileDto } from './dto/update-user-profile.dto';
+import { CreateProfileDto } from './dto/create-user-profile.dto';
+import { User } from '../entities/user.entity';
 
 interface AuthRequest extends Request {
   user: { userId: number; email: string };
@@ -57,6 +60,23 @@ export class UsersController {
         email: updatedUser.email,
         username: updatedUser.username,
       },
+    };
+  }
+
+  @Post('profile')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.CREATED)
+  async createProfile(
+    @Request() req: AuthRequest,
+    @Body() createProfileDto: CreateProfileDto,
+  ): Promise<{ message: string; data: User }> {
+    const createProfile = await this.usersService.createProfile(
+      req.user.userId,
+      createProfileDto,
+    );
+    return {
+      message: 'Profile created successfully',
+      data: createProfile,
     };
   }
 }
