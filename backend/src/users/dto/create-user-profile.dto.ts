@@ -63,6 +63,10 @@ export class ExperienceDto {
 export class CreatePersonalInfoDto {
   @IsOptional()
   @IsString()
+  fullName?: string;
+
+  @IsOptional()
+  @IsString()
   phone?: string;
 
   @IsOptional()

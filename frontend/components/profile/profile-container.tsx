@@ -13,6 +13,7 @@ type ProfileSection = 'personal' | 'professional';
 export interface PersonalFormData {
   fullName: string;
   email: string;
+  username?: string;
   phone: string;
   address: string;
 }
@@ -25,12 +26,14 @@ export default function ProfileContainer() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [updateError, setUpdateError] = useState('');
+  const [updateSuccess, setUpdateSuccess] = useState(false);
   
   const [activeSection, setActiveSection] = useState<ProfileSection>('personal');
 
   const [personalData, setPersonalData] = useState<PersonalFormData>({
     fullName: '',
     email: '',
+    username: '',
     phone: '',
     address: '',
   });
@@ -71,7 +74,8 @@ export default function ProfileContainer() {
         
         const newPersonalData = {
           fullName: personalInfo.fullName || '',
-          email: emailFromResponse,  
+          email: emailFromResponse,
+          username: response.data.username || '',
           phone: personalInfo.phone || '',
           address: personalInfo.address || '',
         };
@@ -136,10 +140,19 @@ export default function ProfileContainer() {
         experiences: filledExperiences,
       };
       await updateProfile(updateData);
-        console.log('✓ Profile updated');
+      setUpdateError('');
+      setUpdateSuccess(true);
+      
+      // Auto-dismiss success message after 3 seconds
+      setTimeout(() => {
+        setUpdateSuccess(false);
+      }, 3000);
+      
+      console.log('✓ Profile updated');
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : 'Update failed';
       setUpdateError(errorMsg);
+      setUpdateSuccess(false);
       alert(`✗ Error: ${errorMsg}`);
         console.error('❌ Update error:', errorMsg);
     }
@@ -185,6 +198,11 @@ export default function ProfileContainer() {
 
   return (
     <main className="flex-1 px-6 py-10">
+      {updateSuccess && (
+        <div className="mb-6 rounded-lg bg-green-50 p-4 border border-green-200">
+          <p className="text-sm font-medium text-green-800">✓ Profile updated successfully!</p>
+        </div>
+      )}
       <div className="mx-auto flex w-full max-w-6xl gap-6">
         <div className="w-full md:w-[30%]">
           <ProfileSidebar
@@ -201,6 +219,7 @@ export default function ProfileContainer() {
               onUpdate={handleUpdate}
               onContinue={gotoNextSection}
               error={updateError}
+              readOnlyFields={['email', 'username']}
             />
           ) : (
             <ProfessionalDetails

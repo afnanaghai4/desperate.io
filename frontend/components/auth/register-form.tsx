@@ -54,7 +54,7 @@ export default function RegisterForm() {
 
     try {
        await signupUser({ username, email, password });
-      router.push('/login');
+      router.push('/profile/setup');
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Signup failed. Please try again.'

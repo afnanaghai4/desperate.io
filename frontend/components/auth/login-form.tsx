@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 import { loginUser, checkAuth } from '@/lib/auth-api';
+import { getProfile } from '@/lib/users-api';
 import AuthCard from '../ui/auth-card';
 import InputField from '../ui/input-field';
 import AuthButton from '../ui/auth-button';
@@ -52,18 +53,33 @@ export default function LoginForm() {
     setIsLoading(true);
 
     try {
-      // loginUser() calls the backend API
-      // The backend responds with Set-Cookie header
-      // The browser (via credentials: 'include') automatically stores it as an HTTP-only cookie
-      // No token is stored in JavaScript or localStorage - it's safe from XSS
+      // Login user
       await loginUser({ email, password });
-      // Redirect to dashboard on success
-      // The HTTP-only cookie will be sent automatically with future requests
-      router.push('/dashboard');
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Login failed. Please try again.'
       );
+      setIsLoading(false);
+      return;
+    }
+
+    // Only reached if login was successful
+    try {
+      // Check if user has completed profile setup
+      const profileResponse = await getProfile();
+      const hasProfile = profileResponse.data.profileDetails !== null;
+      
+      // Redirect based on profile status
+      if (hasProfile) {
+        router.push('/dashboard');
+      } else {
+        // Profile not completed, send to setup
+        router.push('/profile/setup');
+      }
+    } catch {
+      // Profile fetch failed - log it but redirect to setup anyway
+      // User is authenticated (login succeeded), but we couldn't verify profile
+      router.push('/profile/setup');
     } finally {
       setIsLoading(false);
     }
