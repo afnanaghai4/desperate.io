@@ -55,7 +55,16 @@ export default function LoginForm() {
     try {
       // Login user
       await loginUser({ email, password });
-      
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Login failed. Please try again.'
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    // Only reached if login was successful
+    try {
       // Check if user has completed profile setup
       const profileResponse = await getProfile();
       const hasProfile = profileResponse.data.profileDetails !== null;
@@ -67,10 +76,10 @@ export default function LoginForm() {
         // Profile not completed, send to setup
         router.push('/profile/setup');
       }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Login failed. Please try again.'
-      );
+    } catch {
+      // Profile fetch failed - log it but redirect to setup anyway
+      // User is authenticated (login succeeded), but we couldn't verify profile
+      router.push('/profile/setup');
     } finally {
       setIsLoading(false);
     }

@@ -24,6 +24,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @HttpCode(201)
   async register(@Body() RegisterDto: RegisterDto, @Res() res: Response) {
     const result = await this.authService.register(RegisterDto);
 
@@ -39,7 +40,7 @@ export class AuthController {
 
     // Return response without token in body (it's in the secure cookie)
     const includeTokenInResponse = process.env.NODE_ENV !== 'production';
-    return res.json({
+    return res.status(201).json({
       message: result.message,
       data: {
         user: result.data.user,

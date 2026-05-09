@@ -25,9 +25,20 @@ export default function ProfileGuard({ children }: ProfileGuardProps) {
         } else {
           setHasProfile(true);
         }
-      } catch {
-        // If error fetching profile, assume not complete
-        router.push('/profile/setup');
+      } catch (err) {
+        // Distinguish auth errors (401/403) from transient errors
+        const isAuthError = err instanceof Error && 
+          (err.message.includes('401') || err.message.includes('403') || err.message.includes('Unauthorized'));
+        
+        if (isAuthError) {
+          // Auth error - user is not authenticated, redirect to setup
+          router.push('/profile/setup');
+        } else {
+          // Transient/server error - stay in loading state and show error
+          // This prevents redirecting when there's a temporary network issue
+          setIsChecking(false);
+          return;
+        }
       } finally {
         setIsChecking(false);
       }

@@ -43,15 +43,21 @@ export default function ProfileSetupContainer() {
   // Fetch current user on mount and prefill email/username
   useEffect(() => {
     const fetchUser = async () => {
-      const user = await checkAuth();
-      if (user) {
-        setPersonalData((prev) => ({
-          ...prev,
-          email: user.email || '',
-          username: user.username || '',
-        }));
+      try {
+        const user = await checkAuth();
+        if (user) {
+          setPersonalData((prev) => ({
+            ...prev,
+            email: user.email || '',
+            username: user.username || '',
+          }));
+        }
+      } catch (err) {
+        // Handle checkAuth() failure - loading will still resolve
+        console.error('Failed to fetch user info:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchUser();

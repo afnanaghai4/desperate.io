@@ -49,7 +49,7 @@ export interface User {
   email: string;
   role: string;
   profileDetails: UserProfile | null;
-  createdAt: Date;
+  createdAt: string;  // JSON response arrives as ISO string, not Date object
 }
 
 export async function getProfile(): Promise<GetProfileResponse> {
