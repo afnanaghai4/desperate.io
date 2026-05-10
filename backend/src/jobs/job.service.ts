@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateJobDto } from './dto/create-job.dto';
@@ -59,7 +59,7 @@ export class JobService {
     const deleteResult = await this.jobRepository.delete({ jobId, userId });
 
     if (deleteResult.affected === 0) {
-      throw new Error('Job not found or not authorized to delete');
+      throw new NotFoundException('Job not found or not authorized to delete');
     }
   }
 }
