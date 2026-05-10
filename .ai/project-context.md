@@ -18,7 +18,9 @@ Key functionality:
 - **Framework**: Next.js 16.2.3 (with App Router)
 - **Language**: TypeScript 5
 - **Styling**: Tailwind CSS 4
-- **UI Library**: Lucide React for icons
+- **UI Library**: Lucide React (^1.7.0) for icons
+- **React**: 19.2.4
+- **React DOM**: 19.2.4
 - **HTTP Client**: Custom fetch-based `apiFetch` utility with credentials support
 
 ### Backend
@@ -44,7 +46,7 @@ desperate.io/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml              # GitHub Actions CI pipeline
-├── ai/
+├── .ai/
 │   ├── project-context.md      # This file
 │   ├── agents/
 │   ├── skills/

@@ -132,7 +132,7 @@ Local tests are for development speed. Docker/CI-style verification is the final
 
 Open a PR with this information:
 
-```
+```markdown
 ## Issue
 Closes #123 (or reference the issue)
 

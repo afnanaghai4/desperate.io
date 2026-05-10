@@ -28,7 +28,7 @@ Use backend unit tests for:
 
 Colocate with source files under `backend/src/**`, using `*.spec.ts` naming:
 
-```
+```text
 backend/src/
   jobs/
     job.service.ts
@@ -65,7 +65,7 @@ Use e2e tests for:
 
 Place all e2e tests under `backend/test/`:
 
-```
+```text
 backend/test/
   app.e2e-spec.ts          ← auth flow test
   jobs.e2e-spec.ts         ← job endpoints
