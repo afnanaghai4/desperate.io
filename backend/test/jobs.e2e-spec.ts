@@ -237,7 +237,7 @@ describe('Jobs (e2e)', () => {
       .expect(404);
   });
 
-  it("reports current behavior when deleting another user's job", async () => {
+  it("rejects deleting another user's job", async () => {
     const otherJob = await createTextJob(
       userTwoToken,
       `Unauthorized Delete Job ${runId}`,
@@ -246,7 +246,7 @@ describe('Jobs (e2e)', () => {
     await createTestRequest(app)
       .delete(`/jobs/${otherJob.data.jobId}`)
       .set('Authorization', `Bearer ${userOneToken}`)
-      .expect(500);
+      .expect(404);
   });
 
   it('returns existing analysis with a job when present', async () => {
@@ -345,7 +345,7 @@ describe('Jobs (e2e)', () => {
     await createTestRequest(app)
       .delete(`/jobs/${otherJob.data.jobId}`)
       .set('Authorization', `Bearer ${userOneToken}`)
-      .expect(500);
+      .expect(404);
 
     await expect(
       jobRepository.findOneBy({ jobId: otherJob.data.jobId }),
