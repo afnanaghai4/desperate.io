@@ -41,6 +41,7 @@ services:
       - ./backend/.env.test
     environment:
       NODE_ENV: test
+      DB_HOST: postgres
     command: npm run test:e2e
     depends_on:
       postgres:

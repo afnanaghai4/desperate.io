@@ -18,7 +18,7 @@ import { AiOrchestratorModule } from './ai-orchestrator/ai-orchestrator.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
     }),
 
     TypeOrmModule.forRootAsync({
