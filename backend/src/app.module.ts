@@ -12,7 +12,6 @@ import { Analysis } from './entities/analysis.entity';
 import { Job } from './entities/job.entity';
 import { ProjectRecommendation } from './entities/project-recommendation.entity';
 import { User } from './entities/user.entity';
-import { AppController } from './app.controller';
 import { AiOrchestratorModule } from './ai-orchestrator/ai-orchestrator.module';
 
 @Module({
@@ -44,6 +43,5 @@ import { AiOrchestratorModule } from './ai-orchestrator/ai-orchestrator.module';
     AnalysisModule,
     AiOrchestratorModule,
   ],
-  controllers: [AppController],
 })
 export class AppModule {}
