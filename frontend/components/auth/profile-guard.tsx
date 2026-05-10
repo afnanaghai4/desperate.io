@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getProfile } from '@/lib/users-api';
 
@@ -14,7 +14,7 @@ export default function ProfileGuard({ children }: ProfileGuardProps) {
   const [hasProfile, setHasProfile] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const checkProfile = async () => {
+  const checkProfile = useCallback(async () => {
     setIsChecking(true);
     setError(null);
     
@@ -44,11 +44,11 @@ export default function ProfileGuard({ children }: ProfileGuardProps) {
     } finally {
       setIsChecking(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     checkProfile();
-  }, [router]);
+  }, [checkProfile]);
 
   if (isChecking) {
     return (
