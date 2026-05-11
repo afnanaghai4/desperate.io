@@ -43,9 +43,13 @@ export class AnalysisController {
       throw new BadRequestException('jobId is required');
     }
 
-    // Fetch the job
+    if (!req.user || typeof req.user.userId !== 'number') {
+      throw new BadRequestException('User context is invalid or missing');
+    }
+
+    // Fetch only jobs owned by the authenticated user.
     const job = await this.jobRepository.findOne({
-      where: { jobId: body.jobId },
+      where: { jobId: body.jobId, userId: req.user.userId },
     });
 
     if (!job) {
@@ -60,11 +64,6 @@ export class AnalysisController {
       jobDescription = job.jobLink;
     } else {
       throw new BadRequestException('Job has no description or link');
-    }
-
-    // Call the service with userId and jobDescription
-    if (!req.user || typeof req.user.userId !== 'number') {
-      throw new BadRequestException('User context is invalid or missing');
     }
 
     const request: AnalyzeJobFitRequest = {
