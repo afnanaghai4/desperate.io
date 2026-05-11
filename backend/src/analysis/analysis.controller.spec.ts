@@ -121,7 +121,7 @@ describe('AnalysisController', () => {
     const result = await controller.analyzeFit({ jobId: 5 }, authRequest);
 
     expect(jobRepository.findOne).toHaveBeenCalledWith({
-      where: { jobId: 5 },
+      where: { jobId: 5, userId: 42 },
     });
     expect(aiOrchestratorService.analyzeJobFit).toHaveBeenCalledWith({
       userId: 42,
@@ -166,15 +166,11 @@ describe('AnalysisController', () => {
   });
 
   it('rejects an invalid authenticated user context', async () => {
-    jobRepository.findOne?.mockResolvedValue({
-      jobId: 5,
-      jobText: 'Detailed backend engineering role using NestJS.',
-      jobLink: null,
-    } as Job);
-
     await expect(
       controller.analyzeFit({ jobId: 5 }, invalidAuthRequest),
     ).rejects.toThrow(BadRequestException);
+
+    expect(jobRepository.findOne).not.toHaveBeenCalled();
   });
 
   it('propagates AI failures and does not save an analysis', async () => {

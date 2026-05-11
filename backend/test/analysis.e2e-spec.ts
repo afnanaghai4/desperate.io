@@ -359,23 +359,30 @@ describe('Analysis (e2e)', () => {
     ).resolves.toBeNull();
   });
 
-  it('documents current behavior: an authenticated user can analyze another user job', async () => {
+  it('rejects analyzing a job that belongs to another user', async () => {
+    const recommendationTitle = `Cross-user recommendation ${runId}`;
     const otherUserJob = await createTextJob(
       userTwoToken,
       `Cross User Analysis Job ${runId}`,
     );
     aiOrchestratorService.analyzeJobFit.mockResolvedValue(
-      createAnalysisResponse('Cross-user recommendation'),
+      createAnalysisResponse(recommendationTitle),
     );
 
     await createTestRequest(app)
       .post('/analysis/analyze-fit')
       .set('Authorization', `Bearer ${userOneToken}`)
       .send({ jobId: otherUserJob.jobId })
-      .expect(201);
+      .expect(404);
 
+    expect(aiOrchestratorService.analyzeJobFit).not.toHaveBeenCalled();
     await expect(
       analysisRepository.findOneBy({ jobId: otherUserJob.jobId }),
-    ).resolves.toEqual(expect.objectContaining({ jobId: otherUserJob.jobId }));
+    ).resolves.toBeNull();
+    await expect(
+      recommendationRepository.findOneBy({
+        title: recommendationTitle,
+      }),
+    ).resolves.toBeNull();
   });
 });
