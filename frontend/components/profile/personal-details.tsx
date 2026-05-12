@@ -54,7 +54,7 @@ export default function PersonalDetails({
           </label>
             <input
                 type="text"
-                value={data.fullName}
+                value={data.fullName || ''}
                 onChange={(e) => setData({ ...data, fullName: e.target.value })}
                 required
                 className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
@@ -68,7 +68,7 @@ export default function PersonalDetails({
           </label>
           <input
             type="email"
-            value={data.email}
+            value={data.email || ''}
             readOnly={readOnlyFields.includes('email')}
             onChange={(e) => !readOnlyFields.includes('email') && setData({ ...data, email: e.target.value })}
             className={`w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none ${readOnlyFields.includes('email') ? 'bg-gray-100 cursor-not-allowed' : 'focus:border-blue-500'}`}
@@ -102,7 +102,7 @@ export default function PersonalDetails({
           </label>
           <input
             type="text"
-            value={data.phone}
+            value={data.phone || ''}
             onChange={(e) =>
               setData((prev) => ({ ...prev, phone: e.target.value }))
             }
@@ -117,7 +117,7 @@ export default function PersonalDetails({
           </label>
           <input
             type="text"
-            value={data.address}
+            value={data.address || ''}
             onChange={(e) =>
               setData((prev) => ({ ...prev, address: e.target.value }))
             }

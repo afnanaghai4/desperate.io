@@ -122,7 +122,7 @@ export default function ProfessionalDetails({
                 </label>
                 <input
                   type="text"
-                  value={entry.currentPosition}
+                  value={entry.currentPosition || ''}
                   onChange={(e) =>
                     handleFieldChange(
                       entry.id,
@@ -141,7 +141,7 @@ export default function ProfessionalDetails({
                 </label>
                 <input
                   type="text"
-                  value={entry.company}
+                  value={entry.company || ''}
                   onChange={(e) =>
                     handleFieldChange(entry.id, "company", e.target.value)
                   }
@@ -156,7 +156,7 @@ export default function ProfessionalDetails({
                 </label>
                 <input
                   type="text"
-                  value={entry.experience}
+                  value={entry.experience || ''}
                   onChange={(e) =>
                     handleFieldChange(entry.id, "experience", e.target.value)
                   }
@@ -171,7 +171,7 @@ export default function ProfessionalDetails({
                 </label>
                 <input
                   type="text"
-                  value={entry.skills}
+                  value={entry.skills || ''}
                   onChange={(e) =>
                     handleFieldChange(entry.id, "skills", e.target.value)
                   }
@@ -186,7 +186,7 @@ export default function ProfessionalDetails({
                 </label>
                 <input
                   type="date"
-                  value={entry.startDate}
+                  value={entry.startDate || ''}
                   onChange={(e) =>
                     handleFieldChange(entry.id, "startDate", e.target.value)
                   }
@@ -200,7 +200,7 @@ export default function ProfessionalDetails({
                 </label>
                 <input
                   type="date"
-                  value={entry.endDate}
+                  value={entry.endDate || ''}
                   onChange={(e) =>
                     handleFieldChange(entry.id, "endDate", e.target.value)
                   }
