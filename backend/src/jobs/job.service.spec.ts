@@ -10,6 +10,18 @@ type MockRepository<T extends object = any> = Partial<
   Record<keyof Repository<T>, jest.Mock>
 >;
 
+type MockQueryBuilder = {
+  leftJoin: jest.Mock;
+  where: jest.Mock;
+  orderBy: jest.Mock;
+  addOrderBy: jest.Mock;
+  skip: jest.Mock;
+  take: jest.Mock;
+  select: jest.Mock;
+  addSelect: jest.Mock;
+  getRawAndEntities: jest.Mock;
+};
+
 const createMockRepository = <T extends object>(): MockRepository<T> => ({
   create: jest.fn(),
   save: jest.fn(),
@@ -17,14 +29,39 @@ const createMockRepository = <T extends object>(): MockRepository<T> => ({
   find: jest.fn(),
   findOne: jest.fn(),
   delete: jest.fn(),
+  createQueryBuilder: jest.fn(),
 });
 
 describe('JobService', () => {
   let service: JobService;
   let jobRepository: MockRepository<Job>;
+  let queryBuilder: MockQueryBuilder;
+
+  const selectedJobFields = [
+    'job.jobId',
+    'job.userId',
+    'job.inputType',
+    'job.jobTitle',
+    'job.jobText',
+    'job.jobLink',
+    'job.companyName',
+    'job.createdAt',
+  ];
 
   beforeEach(async () => {
     jobRepository = createMockRepository<Job>();
+    queryBuilder = {
+      leftJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      getRawAndEntities: jest.fn(),
+    };
+    jobRepository.createQueryBuilder?.mockReturnValue(queryBuilder);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -42,6 +79,30 @@ describe('JobService', () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
+
+  function expectJobsQuery(skip: number, take: number, userId = 10) {
+    expect(jobRepository.count).toHaveBeenCalledWith({
+      where: { userId },
+    });
+    expect(jobRepository.createQueryBuilder).toHaveBeenCalledWith('job');
+    expect(queryBuilder.leftJoin).toHaveBeenCalledWith(
+      'analyses',
+      'analysis',
+      'analysis.jobId = job.jobId',
+    );
+    expect(queryBuilder.where).toHaveBeenCalledWith('job.userId = :userId', {
+      userId,
+    });
+    expect(queryBuilder.orderBy).toHaveBeenCalledWith('job.createdAt', 'DESC');
+    expect(queryBuilder.addOrderBy).toHaveBeenCalledWith('job.jobId', 'DESC');
+    expect(queryBuilder.skip).toHaveBeenCalledWith(skip);
+    expect(queryBuilder.take).toHaveBeenCalledWith(take + 1);
+    expect(queryBuilder.select).toHaveBeenCalledWith(selectedJobFields);
+    expect(queryBuilder.addSelect).toHaveBeenCalledWith(
+      '(analysis."analysisId" IS NOT NULL)::boolean',
+      'hasAnalysis',
+    );
+  }
 
   it('creates a TEXT job for the authenticated user', async () => {
     const dto = {
@@ -86,29 +147,64 @@ describe('JobService', () => {
     expect(result).toBe(createdJob);
   });
 
-  it('lists a user jobs with pagination metadata', async () => {
+  it('lists user jobs with hasAnalysis flags and pagination metadata', async () => {
     const jobs = [
-      { jobId: 3, userId: 10 },
-      { jobId: 2, userId: 10 },
-      { jobId: 1, userId: 10 },
+      {
+        jobId: 3,
+        userId: 10,
+        inputType: InputType.TEXT,
+        jobTitle: 'Newest Backend Role',
+        jobText: 'Detailed backend role using NestJS.',
+        jobLink: null,
+        companyName: 'Acme',
+        createdAt: new Date('2026-05-19T12:00:00.000Z'),
+      },
+      {
+        jobId: 2,
+        userId: 10,
+        inputType: InputType.LINK,
+        jobTitle: 'Cloud Role',
+        jobText: null,
+        jobLink: 'https://example.com/jobs/cloud',
+        companyName: 'Globex',
+        createdAt: new Date('2026-05-19T11:00:00.000Z'),
+      },
+      {
+        jobId: 1,
+        userId: 10,
+        inputType: InputType.TEXT,
+        jobTitle: 'Extra Role',
+        jobText: 'Detailed platform role using PostgreSQL.',
+        jobLink: null,
+        companyName: 'Initech',
+        createdAt: new Date('2026-05-19T10:00:00.000Z'),
+      },
     ] as Job[];
 
     jobRepository.count?.mockResolvedValue(3);
-    jobRepository.find?.mockResolvedValue(jobs);
+    queryBuilder.getRawAndEntities.mockResolvedValue({
+      entities: jobs,
+      raw: [
+        { hasAnalysis: true },
+        { hasAnalysis: false },
+        { hasAnalysis: true },
+      ],
+    });
 
     const result = await service.getJobsByUserId(10, 0, 2);
 
-    expect(jobRepository.count).toHaveBeenCalledWith({
-      where: { userId: 10 },
-    });
-    expect(jobRepository.find).toHaveBeenCalledWith({
-      where: { userId: 10 },
-      order: { createdAt: 'DESC', jobId: 'DESC' },
-      skip: 0,
-      take: 3,
-    });
+    expectJobsQuery(0, 2);
     expect(result).toEqual({
-      jobs: jobs.slice(0, 2),
+      jobs: [
+        {
+          ...jobs[0],
+          hasAnalysis: true,
+        },
+        {
+          ...jobs[1],
+          hasAnalysis: false,
+        },
+      ],
       hasMore: true,
       totalCount: 3,
     });
@@ -118,12 +214,21 @@ describe('JobService', () => {
     const jobs = [{ jobId: 1, userId: 10 }] as Job[];
 
     jobRepository.count?.mockResolvedValue(1);
-    jobRepository.find?.mockResolvedValue(jobs);
+    queryBuilder.getRawAndEntities.mockResolvedValue({
+      entities: jobs,
+      raw: [{ hasAnalysis: false }],
+    });
 
     const result = await service.getJobsByUserId(10, 0, 10);
 
+    expectJobsQuery(0, 10);
     expect(result).toEqual({
-      jobs,
+      jobs: [
+        {
+          ...jobs[0],
+          hasAnalysis: false,
+        },
+      ],
       hasMore: false,
       totalCount: 1,
     });

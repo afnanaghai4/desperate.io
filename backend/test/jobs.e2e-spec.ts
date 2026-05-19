@@ -29,7 +29,12 @@ interface JobResponse {
 
 interface JobListResponse {
   message: string;
-  data: Job[];
+  data: Array<
+    Job & {
+      hasAnalysis: boolean;
+      createdAt: string;
+    }
+  >;
   hasMore: boolean;
   totalCount: number;
   totalPages: number;
@@ -174,6 +179,23 @@ describe('Jobs (e2e)', () => {
     expect(body.message).toBe('Jobs retrieved successfully');
     expect(jobIds).toContain(ownJob.data.jobId);
     expect(jobIds).not.toContain(otherJob.data.jobId);
+
+    const listedOwnJob = body.data.find(
+      (job) => job.jobId === ownJob.data.jobId,
+    );
+    expect(listedOwnJob).toEqual(
+      expect.objectContaining({
+        jobId: ownJob.data.jobId,
+        jobTitle: ownJob.data.jobTitle,
+        companyName: ownJob.data.companyName,
+        hasAnalysis: false,
+      }),
+    );
+    expect(listedOwnJob?.createdAt).toEqual(expect.any(String));
+  });
+
+  it('rejects unauthenticated job listing requests', async () => {
+    await createTestRequest(app).get('/jobs').expect(401);
   });
 
   it('returns pagination metadata and hasMore behavior', async () => {
@@ -334,6 +356,27 @@ describe('Jobs (e2e)', () => {
         updatedInterviewPercentage: 84,
       }),
     ]);
+
+    const listRes = await createTestRequest(app)
+      .get('/jobs')
+      .query({ skip: 0, take: 100 })
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .expect(200);
+
+    const listBody = listRes.body as JobListResponse;
+    const listedAnalyzedJob = listBody.data.find(
+      (job) => job.jobId === created.data.jobId,
+    );
+
+    expect(listedAnalyzedJob).toEqual(
+      expect.objectContaining({
+        jobId: created.data.jobId,
+        jobTitle: created.data.jobTitle,
+        companyName: created.data.companyName,
+        hasAnalysis: true,
+      }),
+    );
+    expect(listedAnalyzedJob?.createdAt).toEqual(expect.any(String));
   });
 
   it('persists rejected unauthorized delete target', async () => {
