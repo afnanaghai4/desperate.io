@@ -24,26 +24,49 @@ export class JobService {
     userId: number,
     skip: number = 0,
     take: number = 10,
-  ): Promise<{ jobs: Job[]; hasMore: boolean; totalCount: number }> {
+  ): Promise<{
+    jobs: (Job & { hasAnalysis: boolean })[];
+    hasMore: boolean;
+    totalCount: number;
+  }> {
     // Get total count for this user
     const totalCount = await this.jobRepository.count({
       where: { userId },
     });
 
-    // Fetch take+1 to determine if more exists
-    const jobs = await this.jobRepository.find({
-      where: { userId },
-      order: { createdAt: 'DESC', jobId: 'DESC' }, // Deterministic: tie-breaker with jobId
-      skip,
-      take: take + 1,
-    });
+    // Fetch with LEFT JOIN to check if analysis exists
+    const result = await this.jobRepository
+      .createQueryBuilder('job')
+      .leftJoin('analyses', 'analysis', 'analysis.jobId = job.jobId')
+      .where('job.userId = :userId', { userId })
+      .orderBy('job.createdAt', 'DESC')
+      .addOrderBy('job.jobId', 'DESC')
+      .skip(skip)
+      .take(take + 1)
+      .select([
+        'job.jobId',
+        'job.userId',
+        'job.inputType',
+        'job.jobTitle',
+        'job.jobText',
+        'job.jobLink',
+        'job.companyName',
+        'job.createdAt',
+      ])
+      .addSelect('(analysis."analysisId" IS NOT NULL)::boolean', 'hasAnalysis')
+      .getRawAndEntities();
 
     // If we got more than requested, there are more pages
-    const hasMore = jobs.length > take;
+    const hasMore = result.entities.length > take;
 
-    // Return only the requested amount
+    // Map entities with hasAnalysis boolean
+    const jobsWithAnalysis = result.entities.slice(0, take).map((job, index) => ({
+      ...job,
+      hasAnalysis: result.raw[index].hasAnalysis === true,
+    }));
+
     return {
-      jobs: jobs.slice(0, take),
+      jobs: jobsWithAnalysis,
       hasMore,
       totalCount,
     };
