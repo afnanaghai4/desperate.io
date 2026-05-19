@@ -30,6 +30,7 @@ export class ProjectRecommendation {
 
   @Column({
     type: 'enum',
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     enum: DifficultyLevel as Record<string, string>,
   })
   difficultyLevel: DifficultyLevel;

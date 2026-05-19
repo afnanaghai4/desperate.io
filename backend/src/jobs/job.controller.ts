@@ -81,7 +81,7 @@ export class JobController {
     @Query() query: GetJobsQueryDto,
   ): Promise<{
     message: string;
-    data: Job[];
+    data: (Job & { hasAnalysis: boolean })[];
     hasMore: boolean;
     totalCount: number;
     totalPages: number;
