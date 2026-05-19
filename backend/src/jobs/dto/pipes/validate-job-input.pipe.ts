@@ -66,6 +66,6 @@ export class ValidateJobInputPipe implements PipeTransform<
       throw new BadRequestException('inputType must be either LINK or TEXT');
     }
 
-    return value as JobInputDto;
+    return value;
   }
 }

@@ -158,7 +158,7 @@ describe('AnalysisController', () => {
       jobId: 5,
       jobText: null,
       jobLink: null,
-    } as Job);
+    });
 
     await expect(
       controller.analyzeFit({ jobId: 5 }, authRequest),
@@ -178,7 +178,7 @@ describe('AnalysisController', () => {
       jobId: 5,
       jobText: 'Detailed backend engineering role using NestJS.',
       jobLink: null,
-    } as Job);
+    });
     aiOrchestratorService.analyzeJobFit.mockRejectedValue(
       new InternalServerErrorException('AI unavailable'),
     );

@@ -60,10 +60,13 @@ export class JobService {
     const hasMore = result.entities.length > take;
 
     // Map entities with hasAnalysis boolean
-    const jobsWithAnalysis = result.entities.slice(0, take).map((job, index) => ({
-      ...job,
-      hasAnalysis: result.raw[index].hasAnalysis === true,
-    }));
+    const jobsWithAnalysis = result.entities
+      .slice(0, take)
+      .map((job, index) => ({
+        ...job,
+        hasAnalysis:
+          (result.raw[index] as Record<string, boolean>).hasAnalysis === true,
+      }));
 
     return {
       jobs: jobsWithAnalysis,
