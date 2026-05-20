@@ -9,4 +9,5 @@ export type Job = {
   jobText: string | null;
   jobLink: string | null;
   createdAt: string;
+  hasAnalysis?: boolean;
 };
