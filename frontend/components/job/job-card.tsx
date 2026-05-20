@@ -1,5 +1,7 @@
 "use client";
 
+import { CircleCheckBig } from "lucide-react";
+
 import { Job } from "@/types/job";
 
 interface JobCardProps {
@@ -15,9 +17,20 @@ export default function JobCard({ job, onView, onDelete }: JobCardProps) {
     <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
       <div className="flex justify-between items-start mb-3">
         <h3 className="text-lg font-bold text-gray-900">{job.jobTitle || "Untitled Job"}</h3>
-        <span className={`text-xs ${inputTypeBadgeColor} px-3 py-1 rounded-full`}>
-          {job.inputType}
-        </span>
+        <div className="flex items-center gap-2">
+          {job.hasAnalysis === true && (
+            <span
+              aria-label="Analysis completed"
+              title="Analysis completed"
+              className="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center text-green-600"
+            >
+              <CircleCheckBig aria-hidden="true" className="h-5 w-5" />
+            </span>
+          )}
+          <span className={`text-xs ${inputTypeBadgeColor} px-3 py-1 rounded-full`}>
+            {job.inputType}
+          </span>
+        </div>
       </div>
       <p className="text-gray-700 font-semibold mb-2">{job.companyName || "No company"}</p>
       <p className="text-gray-600 text-sm mb-4 line-clamp-2">

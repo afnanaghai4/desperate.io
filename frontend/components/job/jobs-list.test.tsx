@@ -15,6 +15,7 @@ const jobs: Job[] = [
     jobText: "Build accessible React interfaces.",
     jobLink: null,
     createdAt: "2026-05-12T10:00:00.000Z",
+    hasAnalysis: true,
   },
   {
     jobId: 2,
@@ -25,6 +26,7 @@ const jobs: Job[] = [
     jobText: null,
     jobLink: "https://example.com/jobs/backend",
     createdAt: "2026-05-11T10:00:00.000Z",
+    hasAnalysis: false,
   },
 ];
 
@@ -123,5 +125,47 @@ describe("JobsList", () => {
 
     expect(onView).toHaveBeenCalledWith(1);
     expect(onDelete).toHaveBeenCalledWith(1);
+  });
+
+  it("shows the analysis completed indicator for analyzed jobs", () => {
+    render(<JobsList {...baseProps} />);
+
+    const frontendHeading = screen.getByRole("heading", { name: "Frontend Engineer" });
+    const frontendCard = frontendHeading.parentElement?.parentElement;
+    expect(frontendCard).not.toBeNull();
+
+    expect(within(frontendCard as HTMLElement).getByLabelText("Analysis completed")).toBeInTheDocument();
+    expect(within(frontendCard as HTMLElement).getByTitle("Analysis completed")).toBeInTheDocument();
+  });
+
+  it("hides the analysis completed indicator for unanalyzed jobs", () => {
+    render(<JobsList {...baseProps} />);
+
+    const untitledHeading = screen.getByRole("heading", { name: "Untitled Job" });
+    const untitledCard = untitledHeading.parentElement?.parentElement;
+    expect(untitledCard).not.toBeNull();
+
+    expect(within(untitledCard as HTMLElement).queryByLabelText("Analysis completed")).not.toBeInTheDocument();
+  });
+
+  it("hides the analysis completed indicator when hasAnalysis is missing", () => {
+    const jobWithoutAnalysisFlag: Job = {
+      jobId: 3,
+      userId: 10,
+      inputType: "TEXT",
+      jobTitle: "Cloud Engineer",
+      companyName: "Gamma",
+      jobText: "Operate cloud infrastructure.",
+      jobLink: null,
+      createdAt: "2026-05-10T10:00:00.000Z",
+    };
+
+    render(<JobsList {...baseProps} jobs={[jobWithoutAnalysisFlag]} totalPages={1} />);
+
+    const cloudHeading = screen.getByRole("heading", { name: "Cloud Engineer" });
+    const cloudCard = cloudHeading.parentElement?.parentElement;
+    expect(cloudCard).not.toBeNull();
+
+    expect(within(cloudCard as HTMLElement).queryByLabelText("Analysis completed")).not.toBeInTheDocument();
   });
 });
