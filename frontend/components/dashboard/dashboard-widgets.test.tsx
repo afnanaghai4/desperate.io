@@ -120,12 +120,27 @@ describe("DashboardWidgets", () => {
     );
   });
 
-  it("renders an error state when dashboard data cannot load", async () => {
+  it("renders profile progress when recent jobs fail to load", async () => {
     getJobsMock.mockRejectedValue(new Error("Failed to fetch jobs"));
 
     render(<DashboardWidgets />);
 
     expect(await screen.findByText(/Unable to load recent jobs/i)).toBeInTheDocument();
+    expect(screen.getByRole("progressbar", { name: "Profile 86% complete" })).toBeInTheDocument();
+  });
+
+  it("renders recent jobs when profile progress fails to load", async () => {
+    getJobsMock.mockResolvedValue({
+      jobs: recentJobs,
+      hasMore: false,
+      totalCount: 2,
+      totalPages: 1,
+    });
+    getProfileMock.mockRejectedValue(new Error("Failed to fetch profile"));
+
+    render(<DashboardWidgets />);
+
+    expect(await screen.findByRole("heading", { name: "Frontend Engineer" })).toBeInTheDocument();
     expect(screen.getByText("Profile progress is unavailable right now.")).toBeInTheDocument();
   });
 });

@@ -22,7 +22,7 @@ export default function JobCard({ job, onView, onDelete }: JobCardProps) {
             <span
               aria-label="Analysis completed"
               title="Analysis completed"
-              className="inline-flex h-5 w-5 flex-shrink-0 items-center justify-center text-green-600"
+              className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-green-600"
             >
               <CircleCheckBig aria-hidden="true" className="h-5 w-5" />
             </span>

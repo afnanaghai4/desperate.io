@@ -77,45 +77,56 @@ export default function DashboardWidgets() {
     profile: null,
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [jobsError, setJobsError] = useState<string | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
     const loadDashboardData = async () => {
       setIsLoading(true);
-      setError(null);
+      setJobsError(null);
+      setProfileError(null);
 
-      try {
-        const [jobsResponse, profileResponse] = await Promise.all([
-          getJobs(0, 3),
-          getProfile(),
-        ]);
+      const [jobsResult, profileResult] = await Promise.allSettled([
+        getJobs(0, 3),
+        getProfile(),
+      ]);
 
-        if (!isMounted) {
-          return;
-        }
+      if (!isMounted) {
+        return;
+      }
 
-        setData({
+      if (jobsResult.status === "fulfilled") {
+        const jobsResponse = jobsResult.value;
+        setData((prev) => ({
+          ...prev,
           jobs: Array.isArray(jobsResponse.jobs) ? jobsResponse.jobs : [],
           totalCount: jobsResponse.totalCount || 0,
-          profile: profileResponse.data.profileDetails,
-        });
-      } catch (err) {
-        if (!isMounted) {
-          return;
-        }
-
+        }));
+      } else {
         const message =
-          err instanceof Error
-            ? err.message
-            : "Unable to load dashboard data.";
-        setError(message);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+          jobsResult.reason instanceof Error
+            ? jobsResult.reason.message
+            : "Unable to load recent jobs.";
+        setJobsError(message);
       }
+
+      if (profileResult.status === "fulfilled") {
+        const profileResponse = profileResult.value;
+        setData((prev) => ({
+          ...prev,
+          profile: profileResponse.data.profileDetails,
+        }));
+      } else {
+        const message =
+          profileResult.reason instanceof Error
+            ? profileResult.reason.message
+            : "Profile progress is unavailable right now.";
+        setProfileError(message);
+      }
+
+      setIsLoading(false);
     };
 
     loadDashboardData();
@@ -204,9 +215,13 @@ export default function DashboardWidgets() {
           total={profileCompletion.total}
           percent={profileCompletion.percent}
           isLoading={isLoading}
-          error={error}
+          error={profileError}
         />
-        <RecentJobsCard jobs={data.jobs} isLoading={isLoading} error={error} />
+        <RecentJobsCard
+          jobs={data.jobs}
+          isLoading={isLoading}
+          error={jobsError}
+        />
       </section>
 
       <section
@@ -273,7 +288,7 @@ function ActionCard({
         </div>
         <ArrowRight
           aria-hidden="true"
-          className="mt-1 h-4 w-4 flex-shrink-0 text-gray-400 transition group-hover:text-gray-700"
+          className="mt-1 h-4 w-4 shrink-0 text-gray-400 transition group-hover:text-gray-700"
         />
       </div>
     </Link>
@@ -307,7 +322,7 @@ function ProfileCompletionCard({
         </div>
         <ClipboardCheck
           aria-hidden="true"
-          className="h-6 w-6 flex-shrink-0 text-green-600"
+          className="h-6 w-6 shrink-0 text-green-600"
         />
       </div>
 
