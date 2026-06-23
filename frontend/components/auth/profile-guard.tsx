@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { isApiErrorStatus } from '@/lib/api';
 import { getProfile } from '@/lib/users-api';
 
 interface ProfileGuardProps {
@@ -30,10 +31,7 @@ export default function ProfileGuard({ children }: ProfileGuardProps) {
       }
     } catch (err) {
       // Distinguish auth errors (401/403) from transient errors
-      const isAuthError = err instanceof Error && 
-        (err.message.includes('401') || err.message.includes('403') || err.message.includes('Unauthorized'));
-      
-      if (isAuthError) {
+      if (isApiErrorStatus(err, [401, 403])) {
         // Auth error - user is not authenticated, redirect to setup
         router.push('/profile/setup');
       } else {

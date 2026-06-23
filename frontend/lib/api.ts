@@ -1,5 +1,22 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
 
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+export function isApiErrorStatus(
+  error: unknown,
+  statuses: readonly number[],
+): error is ApiError {
+  return error instanceof ApiError && statuses.includes(error.status);
+}
+
 export async function apiFetch<T>(
   endpoint: string,
   options?: RequestInit
@@ -32,7 +49,7 @@ export async function apiFetch<T>(
       // If response is not JSON, use statusText
     }
     
-    throw new Error(errorMessage);
+    throw new ApiError(errorMessage, res.status);
   }
 
   const text = await res.text();

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Footer from "@/components/layout/footer";
 import Navbar from "@/components/layout/navbar";
 import { checkAuth } from "@/lib/auth-api";
+import { isApiErrorStatus } from "@/lib/api";
 import { getProfile } from "@/lib/users-api";
 
 interface ProtectedShellProps {
@@ -53,13 +54,7 @@ export default function ProtectedShell({
       setError(null);
       setAccessState("allowed");
     } catch (err) {
-      const isAuthError =
-        err instanceof Error &&
-        (err.message.includes("401") ||
-          err.message.includes("403") ||
-          err.message.includes("Unauthorized"));
-
-      if (isAuthError) {
+      if (isApiErrorStatus(err, [401, 403])) {
         setAccessState("redirecting");
         router.replace("/login");
         return;
