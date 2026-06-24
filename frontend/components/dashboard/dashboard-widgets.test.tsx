@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import DashboardWidgets from "./dashboard-widgets";
 import { getJobs } from "@/lib/job-api";
-import { getProfile } from "@/lib/users-api";
+import { getProfile, type UserProfile } from "@/lib/users-api";
 import { type Job } from "@/types/job";
 
 vi.mock("@/lib/job-api", () => ({
@@ -42,25 +42,42 @@ const recentJobs: Job[] = [
   },
 ];
 
-function mockProfileResponse() {
+const incompleteProfile: UserProfile = {
+  personalInfo: {
+    fullName: "Afnan Aghai",
+    phone: "+491234",
+  },
+  experiences: [
+    {
+      currentPosition: "Frontend Engineer",
+      company: "Acme",
+      skills: "React, TypeScript",
+    },
+  ],
+};
+
+const completeProfile: UserProfile = {
+  personalInfo: {
+    fullName: "Afnan Aghai",
+    phone: "+491234",
+    address: "Berlin",
+  },
+  experiences: [
+    {
+      currentPosition: "Frontend Engineer",
+      company: "Acme",
+      skills: "React, TypeScript",
+    },
+  ],
+};
+
+function mockProfileResponse(profileDetails = incompleteProfile) {
   getProfileMock.mockResolvedValue({
     message: "Profile loaded",
     data: {
       email: "user@example.com",
       username: "user",
-      profileDetails: {
-        personalInfo: {
-          fullName: "Afnan Aghai",
-          phone: "+491234",
-        },
-        experiences: [
-          {
-            currentPosition: "Frontend Engineer",
-            company: "Acme",
-            skills: "React, TypeScript",
-          },
-        ],
-      },
+      profileDetails,
     },
   });
 }
@@ -75,7 +92,7 @@ describe("DashboardWidgets", () => {
     cleanup();
   });
 
-  it("renders the dashboard actions and loaded recent jobs", async () => {
+  it("renders the hero actions, profile readiness, and loaded recent jobs", async () => {
     getJobsMock.mockResolvedValue({
       jobs: recentJobs,
       hasMore: false,
@@ -88,9 +105,18 @@ describe("DashboardWidgets", () => {
     expect(screen.getByText("Loading recent jobs...")).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "Frontend Engineer" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Cloud Engineer" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Build proof for the roles you actually want.",
+      })
+    ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Analyze a Job/i })).toHaveAttribute(
       "href",
       "/jobs/create"
+    );
+    expect(screen.getByRole("link", { name: /View Saved Jobs/i })).toHaveAttribute(
+      "href",
+      "/jobs"
     );
     expect(screen.getByRole("link", { name: /Update Profile/i })).toHaveAttribute(
       "href",
@@ -99,24 +125,32 @@ describe("DashboardWidgets", () => {
     expect(screen.getByRole("progressbar", { name: "Profile 86% complete" })).toBeInTheDocument();
     expect(screen.getByText("Saved jobs")).toBeInTheDocument();
     expect(screen.getByText("Recent analyses")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Recent jobs" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Profile readiness" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Add a target job/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Review analyses/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Profile" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Target" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Analyze" })).not.toBeInTheDocument();
     expect(getJobsMock).toHaveBeenCalledWith(0, 3);
     expect(getProfileMock).toHaveBeenCalled();
   });
 
-  it("renders an empty recent jobs state", async () => {
+  it("renders complete profile progress when profile is complete", async () => {
+    mockProfileResponse(completeProfile);
     getJobsMock.mockResolvedValue({
-      jobs: [],
+      jobs: recentJobs,
       hasMore: false,
-      totalCount: 0,
+      totalCount: 2,
       totalPages: 1,
     });
 
     render(<DashboardWidgets />);
 
-    expect(await screen.findByText("No jobs saved yet")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Create Job" })).toHaveAttribute(
+    expect(await screen.findByRole("progressbar", { name: "Profile 100% complete" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Update Profile/i })).toHaveAttribute(
       "href",
-      "/jobs/create"
+      "/profile"
     );
   });
 
@@ -142,5 +176,22 @@ describe("DashboardWidgets", () => {
 
     expect(await screen.findByRole("heading", { name: "Frontend Engineer" })).toBeInTheDocument();
     expect(screen.getByText("Profile progress is unavailable right now.")).toBeInTheDocument();
+  });
+
+  it("renders an empty recent jobs state", async () => {
+    getJobsMock.mockResolvedValue({
+      jobs: [],
+      hasMore: false,
+      totalCount: 0,
+      totalPages: 1,
+    });
+
+    render(<DashboardWidgets />);
+
+    expect(await screen.findByText("No jobs saved yet")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Create Job" })).toHaveAttribute(
+      "href",
+      "/jobs/create"
+    );
   });
 });
