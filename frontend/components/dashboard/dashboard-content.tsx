@@ -4,6 +4,7 @@ export default function DashboardContent() {
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 px-6 py-8 md:py-10">
       <div className="w-full">
+        <h1 className="sr-only">Dashboard</h1>
         <DashboardWidgets />
       </div>
     </main>
