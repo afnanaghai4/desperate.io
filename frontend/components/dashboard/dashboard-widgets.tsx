@@ -5,10 +5,7 @@ import { useEffect, useState } from "react";
 import {
   ArrowRight,
   ClipboardCheck,
-  FileText,
-  Gauge,
   Sparkles,
-  UserRound,
 } from "lucide-react";
 
 import { getJobs } from "@/lib/job-api";
@@ -60,14 +57,6 @@ function getProfileCompletion(profile: UserProfile | null) {
   const percent = Math.round((completed / total) * 100);
 
   return { completed, total, percent };
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(value));
 }
 
 export default function DashboardWidgets() {
@@ -188,27 +177,6 @@ export default function DashboardWidgets() {
         </div>
       </section>
 
-      <section aria-label="Quick actions" className="grid gap-6 md:grid-cols-3">
-        <ActionCard
-          href="/jobs/create"
-          icon={<FileText aria-hidden="true" className="h-5 w-5" />}
-          title="Add a target job"
-          description="Paste a posting or save a job link before running analysis."
-        />
-        <ActionCard
-          href="/jobs"
-          icon={<Gauge aria-hidden="true" className="h-5 w-5" />}
-          title="Review analyses"
-          description="Return to saved jobs and continue from existing fit results."
-        />
-        <ActionCard
-          href="/profile"
-          icon={<UserRound aria-hidden="true" className="h-5 w-5" />}
-          title="Improve your profile"
-          description="Keep your skills and experience current for better matches."
-        />
-      </section>
-
       <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <ProfileCompletionCard
           completed={profileCompletion.completed}
@@ -223,32 +191,6 @@ export default function DashboardWidgets() {
           error={jobsError}
         />
       </section>
-
-      <section
-        aria-label="Recommended workflow"
-        className="grid gap-4 md:grid-cols-4"
-      >
-        <WorkflowStep
-          step="1"
-          title="Profile"
-          description="Keep your work history and skills ready."
-        />
-        <WorkflowStep
-          step="2"
-          title="Target"
-          description="Save the job posting you want to pursue."
-        />
-        <WorkflowStep
-          step="3"
-          title="Analyze"
-          description="Compare requirements against your profile."
-        />
-        <WorkflowStep
-          step="4"
-          title="Build"
-          description="Use project recommendations as your roadmap."
-        />
-      </section>
     </div>
   );
 }
@@ -259,39 +201,6 @@ function SummaryMetric({ label, value }: { label: string; value: string }) {
       <p className="text-2xl font-bold text-gray-900">{value}</p>
       <p className="mt-1 text-xs font-medium text-gray-500">{label}</p>
     </div>
-  );
-}
-
-function ActionCard({
-  href,
-  icon,
-  title,
-  description,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow"
-    >
-      <div className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
-        {icon}
-      </div>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-          <p className="mt-2 text-sm leading-6 text-gray-600">{description}</p>
-        </div>
-        <ArrowRight
-          aria-hidden="true"
-          className="mt-1 h-4 w-4 shrink-0 text-gray-400 transition group-hover:text-gray-700"
-        />
-      </div>
-    </Link>
   );
 }
 
@@ -467,22 +376,10 @@ function RecentJobsCard({
   );
 }
 
-function WorkflowStep({
-  step,
-  title,
-  description,
-}: {
-  step: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-900 text-sm font-semibold text-white">
-        {step}
-      </div>
-      <h3 className="font-semibold text-gray-900">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-gray-600">{description}</p>
-    </div>
-  );
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value));
 }
