@@ -50,10 +50,17 @@ export default function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
+
+    const trimmedUsername = username.trim();
+    if (trimmedUsername.length < 3) {
+      setError('Username must be at least 3 characters long.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-       await signupUser({ username, email, password });
+       await signupUser({ username: trimmedUsername, email, password });
       router.push('/profile/setup');
     } catch (err) {
       setError(
