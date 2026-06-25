@@ -34,7 +34,11 @@ describe('Auth (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -54,6 +58,39 @@ describe('Auth (e2e)', () => {
 
     const authRes = res.body as AuthResponse;
     expect(authRes.data).toBeDefined();
+  });
+
+  it('/auth/register (POST) should reject an empty username', async () => {
+    await createTestRequest(app)
+      .post('/auth/register')
+      .send({
+        username: '',
+        email: `empty-username-${Date.now()}@example.com`,
+        password: 'Password123!',
+      })
+      .expect(400);
+  });
+
+  it('/auth/register (POST) should reject a whitespace-only username', async () => {
+    await createTestRequest(app)
+      .post('/auth/register')
+      .send({
+        username: '   ',
+        email: `blank-username-${Date.now()}@example.com`,
+        password: 'Password123!',
+      })
+      .expect(400);
+  });
+
+  it('/auth/register (POST) should reject usernames shorter than 3 characters after trimming', async () => {
+    await createTestRequest(app)
+      .post('/auth/register')
+      .send({
+        username: ' ab ',
+        email: `short-username-${Date.now()}@example.com`,
+        password: 'Password123!',
+      })
+      .expect(400);
   });
 
   it('/auth/login (POST) should login user and set HTTP-only cookie', async () => {
