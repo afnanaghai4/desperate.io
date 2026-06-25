@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -41,6 +41,34 @@ describe("RegisterForm", () => {
     await renderReadyForm();
 
     await user.type(screen.getByLabelText("Username"), "   ");
+    await user.type(screen.getByLabelText("Email"), "test@example.com");
+    await user.type(screen.getByLabelText("Password"), "Password123!");
+    await user.click(screen.getByRole("button", { name: "Sign Up" }));
+
+    expect(screen.getByText("Username must be at least 3 characters long.")).toBeInTheDocument();
+    expect(signupUserMock).not.toHaveBeenCalled();
+  });
+
+  it("does not submit an empty username", async () => {
+    const user = userEvent.setup();
+    await renderReadyForm();
+
+    await user.type(screen.getByLabelText("Email"), "test@example.com");
+    await user.type(screen.getByLabelText("Password"), "Password123!");
+
+    const form = screen.getByRole("button", { name: "Sign Up" }).closest("form");
+    expect(form).not.toBeNull();
+    fireEvent.submit(form as HTMLFormElement);
+
+    expect(screen.getByText("Username must be at least 3 characters long.")).toBeInTheDocument();
+    expect(signupUserMock).not.toHaveBeenCalled();
+  });
+
+  it("does not submit a username that is too short after trimming", async () => {
+    const user = userEvent.setup();
+    await renderReadyForm();
+
+    await user.type(screen.getByLabelText("Username"), " ab ");
     await user.type(screen.getByLabelText("Email"), "test@example.com");
     await user.type(screen.getByLabelText("Password"), "Password123!");
     await user.click(screen.getByRole("button", { name: "Sign Up" }));
