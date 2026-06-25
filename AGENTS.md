@@ -150,3 +150,13 @@ Review agents must check for:
 - **Committed secrets** — no API keys, tokens, or credentials
 - **CI failures** — lint, test, or build failures
 - **Database schema risks** — migrations without backward compatibility
+
+## PR Review Sub-Agent Workflow
+
+When requested, run the manual PR review sub-agent after creating or substantially updating a PR.
+
+- Use `.ai/agents/pr-review-agent.md` for the sub-agent role and checklist.
+- Use `.ai/workflows/pr-review-workflow.md` for the post-PR review flow.
+- Findings should return to the current Codex session first.
+- The main agent may post a GitHub summary comment only when findings exist, fixes are made, or the user asks for an audit trail.
+- The sub-agent must not approve, merge, or push directly to `main` or `master`.
