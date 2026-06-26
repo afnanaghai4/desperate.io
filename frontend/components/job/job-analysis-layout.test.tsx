@@ -99,4 +99,19 @@ describe("JobAnalysisLayout", () => {
     await waitFor(() => expect(analyzeJobMock).toHaveBeenCalledWith(55));
     expect(await screen.findByText("81%")).toBeInTheDocument();
   });
+
+  it("keeps the analysis panel expanded when analysis fails", async () => {
+    const user = userEvent.setup();
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    analyzeJobMock.mockRejectedValue(new Error("Analysis failed"));
+
+    const { container } = render(<JobAnalysisLayout mode="ANALYZE" jobData={job} />);
+
+    await user.click(screen.getByRole("button", { name: "Analyze job description" }));
+
+    expect(await screen.findAllByRole("alert")).toHaveLength(2);
+    expect(container.querySelector(".lg\\:grid-cols-3")).toBeInTheDocument();
+
+    errorSpy.mockRestore();
+  });
 });

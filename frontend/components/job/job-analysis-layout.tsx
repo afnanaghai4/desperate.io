@@ -18,7 +18,7 @@ export default function JobAnalysisLayout({ mode, jobData, analysisData }: JobLa
   const [isLoading, setIsLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const hasAnalysis = Boolean(analysisResult);
-  const shouldShowAnalysisPanel = hasAnalysis || isLoading;
+  const shouldShowAnalysisPanel = hasAnalysis || isLoading || Boolean(analysisError);
   
 
   const handleAnalysisError = (err: string) => {
