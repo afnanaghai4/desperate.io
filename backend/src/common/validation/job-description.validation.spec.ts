@@ -10,6 +10,30 @@ describe('validateJobDescriptionForAnalysis', () => {
     ).not.toThrow();
   });
 
+  it('allows legitimate Java and Spring job postings', () => {
+    expect(() =>
+      validateJobDescriptionForAnalysis(
+        'We are hiring a Java specialist to build Spring Boot services, maintain REST APIs, improve automated delivery, and collaborate with product teams.',
+      ),
+    ).not.toThrow();
+  });
+
+  it('allows legitimate QA and testing job postings', () => {
+    expect(() =>
+      validateJobDescriptionForAnalysis(
+        'Quality assurance analyst needed to design test plans, automate regression checks, report defects, and work with developers on release readiness.',
+      ),
+    ).not.toThrow();
+  });
+
+  it('allows legitimate German-language job postings', () => {
+    expect(() =>
+      validateJobDescriptionForAnalysis(
+        'Wir suchen einen Systemadministrator fuer Linux Server, Automatisierung, Monitoring, Incident Management und Zusammenarbeit mit dem Entwicklungsteam.',
+      ),
+    ).not.toThrow();
+  });
+
   it('rejects a URL-only description', () => {
     expect(() =>
       validateJobDescriptionForAnalysis('https://example.com/jobs/backend'),
