@@ -19,6 +19,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Job } from '../entities/job.entity';
 import { AnalysisService } from './analysis.service';
+import { validateJobDescriptionForAnalysis } from '../common/validation/job-description.validation';
 
 interface AuthRequest extends ExpressRequest {
   user: { userId: number; email: string };
@@ -65,6 +66,8 @@ export class AnalysisController {
     } else {
       throw new BadRequestException('Job has no description or link');
     }
+
+    validateJobDescriptionForAnalysis(jobDescription);
 
     const request: AnalyzeJobFitRequest = {
       userId: req.user.userId,

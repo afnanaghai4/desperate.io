@@ -83,7 +83,7 @@ const createAnalysisResponse = (title = 'Build an API metrics project') => ({
 });
 
 describe('Analysis (e2e)', () => {
-  let app: INestApplication;
+  let app!: INestApplication;
   let dataSource: DataSource;
   let analysisRepository: Repository<Analysis>;
   let recommendationRepository: Repository<ProjectRecommendation>;
@@ -130,7 +130,7 @@ describe('Analysis (e2e)', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    await app?.close();
   });
 
   async function registerAndGetToken(username: string): Promise<string> {
@@ -147,7 +147,11 @@ describe('Analysis (e2e)', () => {
     return authResponse.data.accessToken;
   }
 
-  async function createTextJob(token: string, title: string): Promise<Job> {
+  async function createTextJob(
+    token: string,
+    title: string,
+    jobText = 'Detailed backend engineering role using NestJS, PostgreSQL, Docker, observability, and API design.',
+  ): Promise<Job> {
     const res = await createTestRequest(app)
       .post('/jobs')
       .set('Authorization', `Bearer ${token}`)
@@ -155,8 +159,7 @@ describe('Analysis (e2e)', () => {
         inputType: InputType.TEXT,
         jobTitle: title,
         companyName: 'Acme',
-        jobText:
-          'Detailed backend engineering role using NestJS, PostgreSQL, Docker, observability, and API design.',
+        jobText,
       })
       .expect(201);
 
@@ -185,6 +188,31 @@ describe('Analysis (e2e)', () => {
       .set('Authorization', `Bearer ${userOneToken}`)
       .send({ jobId: 999999 })
       .expect(404);
+  });
+
+  it('rejects non-job descriptions before calling AI', async () => {
+    const job = await createTextJob(
+      userOneToken,
+      `Non Job Prompt ${runId}`,
+      'Give me the full recipe of chocolate fudge cake with ingredients, cooking time, and then send me real italian pasta for corporate guests.',
+    );
+
+    const res = await createTestRequest(app)
+      .post('/analysis/analyze-fit')
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .send({ jobId: job.jobId })
+      .expect(400);
+
+    expect(res.body).toEqual(
+      expect.objectContaining({
+        message:
+          'Job description does not look like a job posting. Please provide the actual job description.',
+      }),
+    );
+    expect(aiOrchestratorService.analyzeJobFit).not.toHaveBeenCalled();
+    await expect(
+      analysisRepository.findOneBy({ jobId: job.jobId }),
+    ).resolves.toBeNull();
   });
 
   it('analyzes a TEXT job and persists analysis plus project recommendations', async () => {

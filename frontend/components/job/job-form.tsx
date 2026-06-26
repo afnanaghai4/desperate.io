@@ -11,6 +11,8 @@ import JobInputToggle from './job-input-toggle';
 import InputField from "../ui/input-field";
 import JobAnalyzeButton from "./job-analyze-button";
 
+const MIN_JOB_DESCRIPTION_LENGTH = 50;
+
 interface JobFormProps {
   onLoadingStart: () => void;
   onAnalysisComplete: (data: JobAnalysisResponse) => void;
@@ -72,8 +74,8 @@ export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisE
     if (inputType === "TEXT") {
       const trimmedText = jobText.trim();
 
-      if(!trimmedText || trimmedText.length < 10){
-      return "Job description must be at least 10 characters long.";
+      if(!trimmedText || trimmedText.length < MIN_JOB_DESCRIPTION_LENGTH){
+      return "Job description must be at least 50 characters long.";
     }
   }
 
@@ -141,8 +143,11 @@ export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisE
       onAnalysisComplete(analysis);
     } catch(err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred during analysis.";
-      console.error('Analysis error:', errorMessage);
       setError(errorMessage);
+      if (mode === "CREATE") {
+        setIsJobSaved(false);
+        setResult(null);
+      }
       onAnalysisError(errorMessage);
     } finally {
       setLoading(false);
@@ -209,7 +214,7 @@ export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisE
               disabled={loading || isJobSaved}
               className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-black disabled:cursor-not-allowed disabled:bg-gray-100"
             />
-            <p className="mt-2 text-xs text-gray-500">Minimum 10 characters.</p>
+            <p className="mt-2 text-xs text-gray-500">Minimum 50 characters.</p>
           </div>
         ) : (
           <InputField

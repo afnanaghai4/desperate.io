@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import { DifficultyLevel } from '../common/enums/difficulty-level.enum';
 import { UsersService } from '../users/users.service';
+import { validateJobDescriptionForAnalysis } from '../common/validation/job-description.validation';
 
 // USER INPUT RESPONSES //
 
@@ -92,31 +93,7 @@ export class AiOrchestratorService {
     ) {
       throw new Error('Invalid or missing userId (must be a positive integer)');
     }
-    if (!request.jobDescription || typeof request.jobDescription !== 'string') {
-      throw new Error('Invalid or missing jobDescription');
-    }
-
-    const jobtrimmed = request.jobDescription.trim();
-
-    // Reject URL-only jobs (URLs must be actual job text, not just links)
-    const urlPattern = /^https?:\/\/.+$/i;
-    if (urlPattern.test(jobtrimmed)) {
-      throw new Error(
-        'Job description cannot be a URL only. Please provide the actual job posting text.',
-      );
-    }
-
-    if (jobtrimmed.length < 50) {
-      throw new Error(
-        'Job description is too short. Please provide a more detailed description.',
-      );
-    }
-
-    if (jobtrimmed.length > 10000) {
-      throw new Error(
-        'Job description is too long. Please limit to 10,000 characters.',
-      );
-    }
+    validateJobDescriptionForAnalysis(request.jobDescription);
     // Removed: Overly aggressive character filter that blocked common job posting characters
     // like | ("Senior | Lead Engineer"), {} (template placeholders), \\ (Windows paths),
     // and <> (HTML/XML snippets). Job text validation handled by length checks.
