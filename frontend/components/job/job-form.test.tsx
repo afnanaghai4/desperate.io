@@ -22,7 +22,6 @@ vi.mock("@/lib/job-api", () => ({
 
 const createJobMock = vi.mocked(createJob);
 const analyzeJobMock = vi.mocked(analyzeJob);
-let logSpy: ReturnType<typeof vi.spyOn>;
 
 const defaultProps = {
   onLoadingStart: vi.fn(),
@@ -71,11 +70,9 @@ function renderCreateForm() {
 describe("JobForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
   });
 
   afterEach(() => {
-    logSpy.mockRestore();
     cleanup();
   });
 
@@ -214,13 +211,27 @@ describe("JobForm", () => {
     expect(defaultProps.onAnalysisComplete).toHaveBeenCalledWith(analysis);
   });
 
-  it("renders ANALYZE mode with the current disabled analyze button behavior", async () => {
+  it("runs analysis in ANALYZE mode when the saved job has no analysis", async () => {
     const user = userEvent.setup();
+    analyzeJobMock.mockResolvedValue(analysis);
     render(<JobForm {...defaultProps} mode="ANALYZE" jobData={savedTextJob} />);
 
     expect(screen.getByLabelText("Company Name")).toHaveValue("Acme");
     expect(screen.getByLabelText("Job Title")).toHaveValue("Frontend Engineer");
     expect(screen.getByLabelText("Job Description")).toHaveValue("Build accessible React interfaces.");
+    expect(screen.getByRole("button", { name: "Analyze job description" })).toBeEnabled();
+
+    await user.click(screen.getByRole("button", { name: "Analyze job description" }));
+
+    expect(defaultProps.onLoadingStart).toHaveBeenCalled();
+    await waitFor(() => expect(analyzeJobMock).toHaveBeenCalledWith(101));
+    expect(defaultProps.onAnalysisComplete).toHaveBeenCalledWith(analysis);
+  });
+
+  it("disables analysis in ANALYZE mode when analysis already exists", async () => {
+    const user = userEvent.setup();
+    render(<JobForm {...defaultProps} mode="ANALYZE" jobData={savedTextJob} hasAnalysis />);
+
     expect(screen.getByRole("button", { name: "Analyze job description" })).toBeDisabled();
 
     await user.click(screen.getByRole("button", { name: "Go Back" }));
