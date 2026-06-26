@@ -112,7 +112,8 @@ describe('AnalysisController', () => {
       jobId: 5,
       jobTitle: 'Backend Engineer',
       companyName: 'Acme',
-      jobText: 'Detailed backend engineering role using NestJS.',
+      jobText:
+        'Detailed backend engineering role using NestJS, PostgreSQL, Docker, API design, and team collaboration.',
       jobLink: null,
     } as Job;
     jobRepository.findOne?.mockResolvedValue(job);
@@ -165,6 +166,22 @@ describe('AnalysisController', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
+  it('rejects invalid job descriptions before calling AI', async () => {
+    jobRepository.findOne?.mockResolvedValue({
+      jobId: 5,
+      jobText:
+        'Give me the full recipe of chocolate fudge cake with ingredients, cooking time, and italian pasta for corporate guests.',
+      jobLink: null,
+    });
+
+    await expect(
+      controller.analyzeFit({ jobId: 5 }, authRequest),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(aiOrchestratorService.analyzeJobFit).not.toHaveBeenCalled();
+    expect(analysisService.saveAnalysis).not.toHaveBeenCalled();
+  });
+
   it('rejects an invalid authenticated user context', async () => {
     await expect(
       controller.analyzeFit({ jobId: 5 }, invalidAuthRequest),
@@ -176,7 +193,8 @@ describe('AnalysisController', () => {
   it('propagates AI failures and does not save an analysis', async () => {
     jobRepository.findOne?.mockResolvedValue({
       jobId: 5,
-      jobText: 'Detailed backend engineering role using NestJS.',
+      jobText:
+        'Detailed backend engineering role using NestJS, PostgreSQL, Docker, API design, and team collaboration.',
       jobLink: null,
     });
     aiOrchestratorService.analyzeJobFit.mockRejectedValue(

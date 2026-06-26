@@ -47,7 +47,6 @@ export default function JobAnalysisLayout({ mode, jobData, analysisData }: JobLa
           <JobForm 
             onLoadingStart={() => setIsLoading(true)}
             onAnalysisComplete={(data: JobAnalysisResponse) => {
-              console.log('Analysis complete, received data:', data);
               setAnalysisResult(data);
               setAnalysisError(null);
               setIsLoading(false);

@@ -22,7 +22,9 @@ vi.mock("@/lib/job-api", () => ({
 
 const createJobMock = vi.mocked(createJob);
 const analyzeJobMock = vi.mocked(analyzeJob);
-let logSpy: ReturnType<typeof vi.spyOn>;
+
+const validJobDescription =
+  "Build accessible React interfaces for a software engineering role with TypeScript, testing, and product collaboration.";
 
 const defaultProps = {
   onLoadingStart: vi.fn(),
@@ -37,7 +39,7 @@ const savedTextJob: Job = {
   inputType: "TEXT",
   jobTitle: "Frontend Engineer",
   companyName: "Acme",
-  jobText: "Build accessible React interfaces.",
+  jobText: validJobDescription,
   jobLink: null,
   createdAt: "2026-05-12T10:00:00.000Z",
 };
@@ -71,11 +73,9 @@ function renderCreateForm() {
 describe("JobForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
   });
 
   afterEach(() => {
-    logSpy.mockRestore();
     cleanup();
   });
 
@@ -115,7 +115,7 @@ describe("JobForm", () => {
 
     await user.type(screen.getByLabelText("Company Name"), "Acme");
     await user.type(screen.getByLabelText("Job Title"), "Frontend Engineer");
-    await user.type(screen.getByLabelText("Job Description"), "Build accessible React interfaces.");
+    await user.type(screen.getByLabelText("Job Description"), validJobDescription);
     await user.click(screen.getByRole("button", { name: "Submit job analysis" }));
 
     await waitFor(() => {
@@ -123,7 +123,7 @@ describe("JobForm", () => {
         inputType: "TEXT",
         companyName: "Acme",
         jobTitle: "Frontend Engineer",
-        jobText: "Build accessible React interfaces.",
+        jobText: validJobDescription,
         jobLink: undefined,
       });
     });
@@ -159,7 +159,7 @@ describe("JobForm", () => {
     await user.type(screen.getByLabelText("Job Description"), "short");
     await user.click(screen.getByRole("button", { name: "Submit job analysis" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Job description must be at least 10 characters long.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Job description must be at least 50 characters long.");
     expect(createJobMock).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole("button", { name: "Job Link" }));
@@ -174,7 +174,7 @@ describe("JobForm", () => {
     createJobMock.mockRejectedValue(new Error("Unable to create job"));
     renderCreateForm();
 
-    await user.type(screen.getByLabelText("Job Description"), "Build accessible React interfaces.");
+    await user.type(screen.getByLabelText("Job Description"), validJobDescription);
     await user.click(screen.getByRole("button", { name: "Submit job analysis" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Unable to create job");
@@ -190,7 +190,7 @@ describe("JobForm", () => {
     );
     renderCreateForm();
 
-    await user.type(screen.getByLabelText("Job Description"), "Build accessible React interfaces.");
+    await user.type(screen.getByLabelText("Job Description"), validJobDescription);
     await user.click(screen.getByRole("button", { name: "Submit job analysis" }));
 
     expect(screen.getByRole("button", { name: "Submitting job analysis" })).toBeDisabled();
@@ -205,7 +205,7 @@ describe("JobForm", () => {
     analyzeJobMock.mockResolvedValue(analysis);
     renderCreateForm();
 
-    await user.type(screen.getByLabelText("Job Description"), "Build accessible React interfaces.");
+    await user.type(screen.getByLabelText("Job Description"), validJobDescription);
     await user.click(screen.getByRole("button", { name: "Submit job analysis" }));
     await user.click(await screen.findByRole("button", { name: "Analyze job description" }));
 
@@ -214,13 +214,32 @@ describe("JobForm", () => {
     expect(defaultProps.onAnalysisComplete).toHaveBeenCalledWith(analysis);
   });
 
+  it("unlocks a saved job for editing when analysis validation fails", async () => {
+    const user = userEvent.setup();
+    createJobMock.mockResolvedValue({ message: "created", data: savedTextJob });
+    analyzeJobMock.mockRejectedValue(
+      new Error("Job description does not look like a job posting."),
+    );
+    renderCreateForm();
+
+    await user.type(screen.getByLabelText("Job Description"), validJobDescription);
+    await user.click(screen.getByRole("button", { name: "Submit job analysis" }));
+    await user.click(await screen.findByRole("button", { name: "Analyze job description" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Job description does not look like a job posting.",
+    );
+    expect(screen.getByLabelText("Job Description")).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Submit job analysis" })).toBeInTheDocument();
+  });
+
   it("renders ANALYZE mode with the current disabled analyze button behavior", async () => {
     const user = userEvent.setup();
     render(<JobForm {...defaultProps} mode="ANALYZE" jobData={savedTextJob} />);
 
     expect(screen.getByLabelText("Company Name")).toHaveValue("Acme");
     expect(screen.getByLabelText("Job Title")).toHaveValue("Frontend Engineer");
-    expect(screen.getByLabelText("Job Description")).toHaveValue("Build accessible React interfaces.");
+    expect(screen.getByLabelText("Job Description")).toHaveValue(validJobDescription);
     expect(screen.getByRole("button", { name: "Analyze job description" })).toBeDisabled();
 
     await user.click(screen.getByRole("button", { name: "Go Back" }));
