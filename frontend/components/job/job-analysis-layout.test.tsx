@@ -1,9 +1,11 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import JobAnalysisLayout from "./job-analysis-layout";
 import { JobAnalysisResponse } from "@/types/job-analysis";
 import { Job } from "@/types/job";
+import { analyzeJob } from "@/lib/job-api";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -15,6 +17,8 @@ vi.mock("@/lib/job-api", () => ({
   analyzeJob: vi.fn(),
   createJob: vi.fn(),
 }));
+
+const analyzeJobMock = vi.mocked(analyzeJob);
 
 const job: Job = {
   jobId: 55,
@@ -79,5 +83,35 @@ describe("JobAnalysisLayout", () => {
     expect(screen.getByRole("button", { name: "Analyze job description" })).toBeDisabled();
     expect(screen.getByText("81%")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Frontend Portfolio Project" })).toBeInTheDocument();
+  });
+
+  it("enables analyze mode for a saved job without existing analysis", async () => {
+    const user = userEvent.setup();
+    analyzeJobMock.mockResolvedValue(analysisData);
+
+    render(<JobAnalysisLayout mode="ANALYZE" jobData={job} />);
+
+    const analyzeButton = screen.getByRole("button", { name: "Analyze job description" });
+    expect(analyzeButton).toBeEnabled();
+
+    await user.click(analyzeButton);
+
+    await waitFor(() => expect(analyzeJobMock).toHaveBeenCalledWith(55));
+    expect(await screen.findByText("81%")).toBeInTheDocument();
+  });
+
+  it("keeps the analysis panel expanded when analysis fails", async () => {
+    const user = userEvent.setup();
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    analyzeJobMock.mockRejectedValue(new Error("Analysis failed"));
+
+    const { container } = render(<JobAnalysisLayout mode="ANALYZE" jobData={job} />);
+
+    await user.click(screen.getByRole("button", { name: "Analyze job description" }));
+
+    expect(await screen.findAllByRole("alert")).toHaveLength(2);
+    expect(container.querySelector(".lg\\:grid-cols-3")).toBeInTheDocument();
+
+    errorSpy.mockRestore();
   });
 });

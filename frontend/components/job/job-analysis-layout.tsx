@@ -17,7 +17,8 @@ export default function JobAnalysisLayout({ mode, jobData, analysisData }: JobLa
   const [analysisResult, setAnalysisResult] = useState<JobAnalysisResponse | null>(analysisData || null);
   const [isLoading, setIsLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const hasAnalysis = analysisResult || isLoading;
+  const hasAnalysis = Boolean(analysisResult);
+  const shouldShowAnalysisPanel = hasAnalysis || isLoading || Boolean(analysisError);
   
 
   const handleAnalysisError = (err: string) => {
@@ -39,7 +40,7 @@ export default function JobAnalysisLayout({ mode, jobData, analysisData }: JobLa
 
       {/* Grid animates between 2-column and 3-column layout */}
       <div className={`grid gap-6 transition-all duration-700 ease-in-out ${
-        hasAnalysis ? "lg:grid-cols-3" : "lg:grid-cols-2"
+        shouldShowAnalysisPanel ? "lg:grid-cols-3" : "lg:grid-cols-2"
       } grid-cols-1`}>
         
         {/* Left side - Form (fixed width during animation) */}
@@ -47,7 +48,6 @@ export default function JobAnalysisLayout({ mode, jobData, analysisData }: JobLa
           <JobForm 
             onLoadingStart={() => setIsLoading(true)}
             onAnalysisComplete={(data: JobAnalysisResponse) => {
-              console.log('Analysis complete, received data:', data);
               setAnalysisResult(data);
               setAnalysisError(null);
               setIsLoading(false);
@@ -56,12 +56,13 @@ export default function JobAnalysisLayout({ mode, jobData, analysisData }: JobLa
             onClearAnalysis={handleClearAnalysis}
             mode={mode}
             jobData={jobData}
+            hasAnalysis={hasAnalysis}
           />
         </div>
         
         {/* Right side - Results (expands when analyzing) */}
         <div className={`transition-all duration-700 ease-in-out ${
-          hasAnalysis ? "lg:col-span-2" : "lg:col-span-1"
+          shouldShowAnalysisPanel ? "lg:col-span-2" : "lg:col-span-1"
         }`}>
           <JobAnalysisPanel analysisResult={analysisResult} isLoading={isLoading} error={analysisError} />
         </div>

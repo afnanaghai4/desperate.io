@@ -17,10 +17,11 @@ interface JobFormProps {
   onAnalysisError: (err: string) => void;
   onClearAnalysis: () => void;
   mode: "CREATE" | "ANALYZE";
-  jobData?: Job
+  jobData?: Job;
+  hasAnalysis?: boolean;
 }
 
-export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisError, onClearAnalysis, mode, jobData}: JobFormProps) {
+export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisError, onClearAnalysis, mode, jobData, hasAnalysis = false}: JobFormProps) {
   const router = useRouter();
 
   const [inputType, setInputType] = useState<InputType>("TEXT");
@@ -137,9 +138,6 @@ export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisE
     onLoadingStart();
     try {
       const analysis = await analyzeJob(jobId);
-      console.log('analyzeJob returned:', analysis);
-      console.log('matchPercentage:', analysis.matchPercentage);
-      console.log('projectRecommendations:', analysis.projectRecommendations);
       onAnalysisComplete(analysis);
     } catch(err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred during analysis.";
@@ -239,7 +237,7 @@ export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisE
 
         {mode === "CREATE" && isJobSaved && (
           <div className="flex gap-3 pt-2">
-            <JobAnalyzeButton onClick={handleAnalyzeClick} loading={loading} />
+            <JobAnalyzeButton onClick={handleAnalyzeClick} loading={loading} disabled={hasAnalysis} />
             <button
               type="button"
               onClick={handleReset}
@@ -253,7 +251,7 @@ export default function JobForm({onLoadingStart, onAnalysisComplete, onAnalysisE
 
         {mode === "ANALYZE" && (
           <div className="flex gap-3 pt-2">
-            <JobAnalyzeButton onClick={handleAnalyzeClick} loading={loading} disabled={true} />
+            <JobAnalyzeButton onClick={handleAnalyzeClick} loading={loading} disabled={hasAnalysis} />
             <button
               type="button"
               onClick={handleReset}
