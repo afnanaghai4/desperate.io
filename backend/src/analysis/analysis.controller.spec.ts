@@ -15,6 +15,7 @@ import {
 import { Job } from '../entities/job.entity';
 import { AnalysisService } from './analysis.service';
 import { AnalysisController } from './analysis.controller';
+import { JobLinkExtractorService } from './job-link-extractor.service';
 
 type MockRepository<T extends object = any> = Partial<
   Record<keyof Repository<T>, jest.Mock>
@@ -63,6 +64,9 @@ describe('AnalysisController', () => {
   let analysisService: {
     saveAnalysis: jest.Mock;
   };
+  let jobLinkExtractorService: {
+    extract: jest.Mock;
+  };
   let jobRepository: MockRepository<Job>;
   let authRequest: Parameters<AnalysisController['analyzeFit']>[1];
   let invalidAuthRequest: Parameters<AnalysisController['analyzeFit']>[1];
@@ -73,6 +77,9 @@ describe('AnalysisController', () => {
     };
     analysisService = {
       saveAnalysis: jest.fn(),
+    };
+    jobLinkExtractorService = {
+      extract: jest.fn(),
     };
     jobRepository = createMockRepository<Job>();
 
@@ -86,6 +93,10 @@ describe('AnalysisController', () => {
         {
           provide: AnalysisService,
           useValue: analysisService,
+        },
+        {
+          provide: JobLinkExtractorService,
+          useValue: jobLinkExtractorService,
         },
         {
           provide: getRepositoryToken(Job),
@@ -140,6 +151,67 @@ describe('AnalysisController', () => {
     });
   });
 
+  it('extracts and analyzes a LINK job without sending the raw URL to AI', async () => {
+    const extractedDescription =
+      'Senior backend engineer role requiring NestJS, PostgreSQL, Docker, reliable APIs, and team collaboration.';
+    jobRepository.findOne?.mockResolvedValue({
+      jobId: 5,
+      jobTitle: 'Backend Engineer',
+      companyName: 'Acme',
+      jobText: null,
+      jobLink: 'https://example.com/jobs/backend',
+    } as Job);
+    jobLinkExtractorService.extract.mockResolvedValue({
+      description: extractedDescription,
+      sourceUrl: 'https://example.com/jobs/backend',
+    });
+    aiOrchestratorService.analyzeJobFit.mockResolvedValue(analysisResponse);
+
+    await controller.analyzeFit({ jobId: 5 }, authRequest);
+
+    expect(jobLinkExtractorService.extract).toHaveBeenCalledWith(
+      'https://example.com/jobs/backend',
+    );
+    expect(aiOrchestratorService.analyzeJobFit).toHaveBeenCalledWith({
+      userId: 42,
+      jobDescription: extractedDescription,
+    });
+  });
+
+  it('does not call AI when LINK extraction fails', async () => {
+    jobRepository.findOne?.mockResolvedValue({
+      jobId: 5,
+      jobText: null,
+      jobLink: 'https://example.com/jobs/backend',
+    } as Job);
+    jobLinkExtractorService.extract.mockRejectedValue(
+      new BadRequestException('Could not extract a usable job description'),
+    );
+
+    await expect(
+      controller.analyzeFit({ jobId: 5 }, authRequest),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(aiOrchestratorService.analyzeJobFit).not.toHaveBeenCalled();
+    expect(analysisService.saveAnalysis).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid job descriptions before calling AI', async () => {
+    jobRepository.findOne?.mockResolvedValue({
+      jobId: 5,
+      jobText:
+        'Give me the full recipe of chocolate fudge cake with ingredients, cooking time, and italian pasta for corporate guests.',
+      jobLink: null,
+    } as Job);
+
+    await expect(
+      controller.analyzeFit({ jobId: 5 }, authRequest),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(aiOrchestratorService.analyzeJobFit).not.toHaveBeenCalled();
+    expect(analysisService.saveAnalysis).not.toHaveBeenCalled();
+  });
+
   it('rejects a missing job id', async () => {
     await expect(
       controller.analyzeFit({ jobId: 0 }, authRequest),
@@ -164,22 +236,6 @@ describe('AnalysisController', () => {
     await expect(
       controller.analyzeFit({ jobId: 5 }, authRequest),
     ).rejects.toThrow(BadRequestException);
-  });
-
-  it('rejects invalid job descriptions before calling AI', async () => {
-    jobRepository.findOne?.mockResolvedValue({
-      jobId: 5,
-      jobText:
-        'Give me the full recipe of chocolate fudge cake with ingredients, cooking time, and italian pasta for corporate guests.',
-      jobLink: null,
-    });
-
-    await expect(
-      controller.analyzeFit({ jobId: 5 }, authRequest),
-    ).rejects.toThrow(BadRequestException);
-
-    expect(aiOrchestratorService.analyzeJobFit).not.toHaveBeenCalled();
-    expect(analysisService.saveAnalysis).not.toHaveBeenCalled();
   });
 
   it('rejects an invalid authenticated user context', async () => {
