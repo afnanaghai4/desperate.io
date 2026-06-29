@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import cookieParser from 'cookie-parser';
 
@@ -7,6 +11,7 @@ import { AppModule } from './../src/app.module';
 import { AiOrchestratorService } from '../src/ai-orchestrator/ai-orchestrator.service';
 import { DifficultyLevel } from '../src/common/enums/difficulty-level.enum';
 import { InputType } from '../src/common/enums/input-type.enum';
+import { JobLinkExtractorService } from '../src/analysis/job-link-extractor.service';
 import { Analysis } from '../src/entities/analysis.entity';
 import { Job } from '../src/entities/job.entity';
 import { ProjectRecommendation } from '../src/entities/project-recommendation.entity';
@@ -92,11 +97,17 @@ describe('Analysis (e2e)', () => {
   let aiOrchestratorService: {
     analyzeJobFit: jest.Mock<Promise<unknown>, [unknown]>;
   };
+  let jobLinkExtractorService: {
+    extract: jest.Mock<Promise<unknown>, [string]>;
+  };
   const runId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
   beforeAll(async () => {
     aiOrchestratorService = {
       analyzeJobFit: jest.fn<Promise<unknown>, [unknown]>(),
+    };
+    jobLinkExtractorService = {
+      extract: jest.fn<Promise<unknown>, [string]>(),
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -104,6 +115,8 @@ describe('Analysis (e2e)', () => {
     })
       .overrideProvider(AiOrchestratorService)
       .useValue(aiOrchestratorService)
+      .overrideProvider(JobLinkExtractorService)
+      .useValue(jobLinkExtractorService)
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -160,6 +173,22 @@ describe('Analysis (e2e)', () => {
         jobTitle: title,
         companyName: 'Acme',
         jobText,
+      })
+      .expect(201);
+
+    const body = res.body as JobResponse;
+    return body.data;
+  }
+
+  async function createLinkJob(token: string, title: string): Promise<Job> {
+    const res = await createTestRequest(app)
+      .post('/jobs')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        inputType: InputType.LINK,
+        jobTitle: title,
+        companyName: 'Acme',
+        jobLink: `https://example.com/jobs/${encodeURIComponent(title)}`,
       })
       .expect(201);
 
@@ -266,6 +295,65 @@ describe('Analysis (e2e)', () => {
         displayOrder: 0,
       }),
     ]);
+  });
+
+  it('analyzes a LINK job using extracted page text', async () => {
+    const job = await createLinkJob(userOneToken, `Analysis Link Job ${runId}`);
+    const extractedDescription =
+      'Senior backend engineering role requiring NestJS, PostgreSQL, Docker, observability, API design, and team collaboration.';
+    const aiResponse = createAnalysisResponse('Build a link analysis project');
+
+    jobLinkExtractorService.extract.mockResolvedValue({
+      description: extractedDescription,
+      sourceUrl: job.jobLink,
+    });
+    aiOrchestratorService.analyzeJobFit.mockResolvedValue(aiResponse);
+
+    const res = await createTestRequest(app)
+      .post('/analysis/analyze-fit')
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .send({ jobId: job.jobId })
+      .expect(201);
+
+    const body = res.body as AnalysisEndpointResponse;
+    expect(body.data).toEqual(aiResponse);
+    expect(jobLinkExtractorService.extract).toHaveBeenCalledWith(job.jobLink);
+
+    const analyzeCall = aiOrchestratorService.analyzeJobFit.mock
+      .calls[0][0] as { userId: number; jobDescription: string };
+    expect(analyzeCall.jobDescription).toBe(extractedDescription);
+
+    const persistedJob = await dataSource
+      .getRepository(Job)
+      .findOneBy({ jobId: job.jobId });
+    expect(persistedJob).toEqual(
+      expect.objectContaining({
+        inputType: InputType.LINK,
+        jobLink: job.jobLink,
+        jobText: null,
+      }),
+    );
+  });
+
+  it('does not persist analysis records when LINK extraction fails', async () => {
+    const job = await createLinkJob(
+      userOneToken,
+      `Analysis Link Failure Job ${runId}`,
+    );
+    jobLinkExtractorService.extract.mockRejectedValue(
+      new BadRequestException('Could not extract a usable job description'),
+    );
+
+    await createTestRequest(app)
+      .post('/analysis/analyze-fit')
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .send({ jobId: job.jobId })
+      .expect(400);
+
+    expect(aiOrchestratorService.analyzeJobFit).not.toHaveBeenCalled();
+    await expect(
+      analysisRepository.findOneBy({ jobId: job.jobId }),
+    ).resolves.toBeNull();
   });
 
   it('returns persisted analysis through the job detail endpoint', async () => {

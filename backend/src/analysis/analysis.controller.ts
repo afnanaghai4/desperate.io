@@ -19,6 +19,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Job } from '../entities/job.entity';
 import { AnalysisService } from './analysis.service';
+import { JobLinkExtractorService } from './job-link-extractor.service';
 import { validateJobDescriptionForAnalysis } from '../common/validation/job-description.validation';
 
 interface AuthRequest extends ExpressRequest {
@@ -30,6 +31,7 @@ export class AnalysisController {
   constructor(
     private aiOrchestratorService: AiOrchestratorService,
     private analysisService: AnalysisService,
+    private jobLinkExtractorService: JobLinkExtractorService,
     @InjectRepository(Job)
     private jobRepository: Repository<Job>,
   ) {}
@@ -62,7 +64,10 @@ export class AnalysisController {
     if (job.jobText) {
       jobDescription = job.jobText;
     } else if (job.jobLink) {
-      jobDescription = job.jobLink;
+      const extractedContent = await this.jobLinkExtractorService.extract(
+        job.jobLink,
+      );
+      jobDescription = extractedContent.description;
     } else {
       throw new BadRequestException('Job has no description or link');
     }

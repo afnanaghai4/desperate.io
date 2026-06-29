@@ -6,6 +6,7 @@ import { AiOrchestratorModule } from 'src/ai-orchestrator/ai-orchestrator.module
 import { Job } from 'src/entities/job.entity';
 import { Analysis } from 'src/entities/analysis.entity';
 import { ProjectRecommendation } from 'src/entities/project-recommendation.entity';
+import { JobLinkExtractorService } from './job-link-extractor.service';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { ProjectRecommendation } from 'src/entities/project-recommendation.entit
     TypeOrmModule.forFeature([Job, Analysis, ProjectRecommendation]),
   ],
   controllers: [AnalysisController],
-  providers: [AnalysisService],
+  providers: [AnalysisService, JobLinkExtractorService],
   exports: [AnalysisService],
 })
 export class AnalysisModule {}
