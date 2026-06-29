@@ -15,6 +15,17 @@ describe('JobLinkExtractorService', () => {
     jest.restoreAllMocks();
   });
 
+  it('rejects DNS lookup failures as bad requests', async () => {
+    jest.restoreAllMocks();
+    jest.spyOn(service as any, 'assertSafeHostname');
+    const requestSpy = jest.spyOn(service as any, 'requestUrl');
+
+    await expect(
+      service.extract('https://missing.example.invalid/jobs'),
+    ).rejects.toThrow(BadRequestException);
+    expect(requestSpy).not.toHaveBeenCalled();
+  });
+
   it('extracts a JSON-LD JobPosting description', async () => {
     jest.spyOn(service as any, 'requestUrl').mockResolvedValue({
       statusCode: 200,
@@ -106,6 +117,21 @@ describe('JobLinkExtractorService', () => {
     await expect(service.extract('http://localhost/jobs')).rejects.toThrow(
       BadRequestException,
     );
+    expect(requestSpy).not.toHaveBeenCalled();
+  });
+
+  it('rejects private IPv4-mapped IPv6 targets before fetching', async () => {
+    const requestSpy = jest.spyOn(service as any, 'requestUrl');
+
+    await expect(
+      service.extract('http://[::ffff:172.16.0.1]/jobs'),
+    ).rejects.toThrow(BadRequestException);
+    await expect(
+      service.extract('http://[::ffff:169.254.169.254]/jobs'),
+    ).rejects.toThrow(BadRequestException);
+    await expect(
+      service.extract('http://[::ffff:100.64.0.1]/jobs'),
+    ).rejects.toThrow(BadRequestException);
     expect(requestSpy).not.toHaveBeenCalled();
   });
 

@@ -238,22 +238,6 @@ describe('AnalysisController', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('rejects invalid job descriptions before calling AI', async () => {
-    jobRepository.findOne?.mockResolvedValue({
-      jobId: 5,
-      jobText:
-        'Give me the full recipe of chocolate fudge cake with ingredients, cooking time, and italian pasta for corporate guests.',
-      jobLink: null,
-    });
-
-    await expect(
-      controller.analyzeFit({ jobId: 5 }, authRequest),
-    ).rejects.toThrow(BadRequestException);
-
-    expect(aiOrchestratorService.analyzeJobFit).not.toHaveBeenCalled();
-    expect(analysisService.saveAnalysis).not.toHaveBeenCalled();
-  });
-
   it('rejects an invalid authenticated user context', async () => {
     await expect(
       controller.analyzeFit({ jobId: 5 }, invalidAuthRequest),

@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { load } from 'cheerio';
+import type { LookupAddress } from 'dns';
 import * as dnsPromises from 'dns/promises';
 import * as http from 'http';
 import * as https from 'https';
@@ -358,10 +359,23 @@ export class JobLinkExtractorService {
       throw new BadRequestException('Job link host is not allowed');
     }
 
-    const addresses = await dnsPromises.lookup(hostname, {
-      all: true,
-      verbatim: true,
-    });
+    let addresses: LookupAddress[];
+    try {
+      addresses = await dnsPromises.lookup(hostname, {
+        all: true,
+        verbatim: true,
+      });
+    } catch (error) {
+      const reason =
+        error instanceof Error && 'code' in error
+          ? String((error as NodeJS.ErrnoException).code)
+          : 'lookup_failed';
+      this.logger.warn(
+        `Job link DNS lookup failed: host=${hostname} reason=${reason}`,
+      );
+      throw new BadRequestException('Job link could not be loaded');
+    }
+
     if (
       addresses.length === 0 ||
       addresses.some((address) => this.isUnsafeIpAddress(address.address))
@@ -379,7 +393,7 @@ export class JobLinkExtractorService {
   }
 
   private isUnsafeHostname(hostname: string): boolean {
-    const normalizedHostname = hostname.toLowerCase();
+    const normalizedHostname = hostname.toLowerCase().replace(/^\[|\]$/g, '');
     return (
       normalizedHostname === 'localhost' ||
       normalizedHostname.endsWith('.localhost') ||
@@ -422,17 +436,49 @@ export class JobLinkExtractorService {
   }
 
   private isUnsafeIpv6(address: string): boolean {
-    const normalizedAddress = address.toLowerCase();
+    const normalizedAddress = address.toLowerCase().replace(/^\[|\]$/g, '');
+    const ipv4MappedAddress = normalizedAddress.match(/^::ffff:(.+)$/);
+
+    if (ipv4MappedAddress) {
+      const mappedIpv4 = this.ipv4FromMappedIpv6(ipv4MappedAddress[1]);
+      return mappedIpv4 ? this.isUnsafeIpv4(mappedIpv4) : true;
+    }
+
     return (
       normalizedAddress === '::' ||
       normalizedAddress === '::1' ||
       normalizedAddress.startsWith('fc') ||
       normalizedAddress.startsWith('fd') ||
       normalizedAddress.startsWith('fe80') ||
-      normalizedAddress.startsWith('ff') ||
-      normalizedAddress.startsWith('::ffff:127.') ||
-      normalizedAddress.startsWith('::ffff:10.') ||
-      normalizedAddress.startsWith('::ffff:192.168.')
+      normalizedAddress.startsWith('ff')
     );
+  }
+
+  private ipv4FromMappedIpv6(value: string): string | null {
+    if (isIP(value) === 4) {
+      return value;
+    }
+
+    const hextets = value.split(':');
+    if (hextets.length !== 2) {
+      return null;
+    }
+
+    const parsedHextets = hextets.map((hextet) => Number.parseInt(hextet, 16));
+    if (
+      parsedHextets.some(
+        (hextet) => Number.isNaN(hextet) || hextet < 0 || hextet > 0xffff,
+      )
+    ) {
+      return null;
+    }
+
+    const [high, low] = parsedHextets;
+    return [
+      (high >> 8) & 0xff,
+      high & 0xff,
+      (low >> 8) & 0xff,
+      low & 0xff,
+    ].join('.');
   }
 }
