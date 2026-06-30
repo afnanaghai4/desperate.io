@@ -43,6 +43,7 @@ Before making any changes, agents must read:
 - **Do not push directly to main.** Always use feature branches and PRs.
 - **Do not auto-merge PRs.** Manual review required.
 - **Keep PRs small and focused.** One issue or task per PR.
+- **Keep PRs reviewable.** Each PR should stay at or below 600 lines of code changed and must not exceed that limit unless explicitly approved before implementation.
 - **Work on one issue or task at a time.** Avoid context switching.
 - **Do not change API contracts unless explicitly requested.**
 - **Do not redesign the UI unless explicitly requested.**

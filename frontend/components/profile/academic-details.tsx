@@ -82,152 +82,184 @@ export default function AcademicDetails({
       )}
 
       <div className="space-y-6">
-        {entries.map((entry, index) => (
-          <div
-            key={entry.id}
-            className="rounded-xl border border-gray-200 p-5 shadow-sm"
-          >
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-800">
-                Education {index + 1}
-              </h2>
+        {entries.map((entry, index) => {
+          const fieldId = (field: string) => `education-${entry.id}-${field}`;
 
-              {entries.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => handleDeleteEducation(entry.id)}
-                  className="rounded-lg p-2 text-red-500 transition hover:bg-red-50 hover:text-red-600"
-                  aria-label={`Delete education ${index + 1}`}
+          return (
+            <div
+              key={entry.id}
+              className="rounded-xl border border-gray-200 p-5 shadow-sm"
+            >
+              <div className="mb-5 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-800">
+                  Education {index + 1}
+                </h2>
+
+                {entries.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteEducation(entry.id)}
+                    className="rounded-lg p-2 text-red-500 transition hover:bg-red-50 hover:text-red-600"
+                    aria-label={`Delete education ${index + 1}`}
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor={fieldId("institute-name")}
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
+                    Institute Name
+                  </label>
+                  <input
+                    id={fieldId("institute-name")}
+                    type="text"
+                    value={entry.instituteName || ""}
+                    onChange={(e) =>
+                      handleFieldChange(entry.id, "instituteName", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
+                    placeholder="Enter your institute name"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={fieldId("degree-name")}
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
+                    Degree Name
+                  </label>
+                  <input
+                    id={fieldId("degree-name")}
+                    type="text"
+                    value={entry.degreeName || ""}
+                    onChange={(e) =>
+                      handleFieldChange(entry.id, "degreeName", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
+                    placeholder="Enter your degree name"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={fieldId("field-of-study")}
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
+                    Field of Study
+                  </label>
+                  <input
+                    id={fieldId("field-of-study")}
+                    type="text"
+                    value={entry.fieldOfStudy || ""}
+                    onChange={(e) =>
+                      handleFieldChange(entry.id, "fieldOfStudy", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
+                    placeholder="Enter your field of study"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={fieldId("grade-cgpa")}
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
+                    Grade/CGPA
+                  </label>
+                  <input
+                    id={fieldId("grade-cgpa")}
+                    type="text"
+                    value={entry.gradeCgpa || ""}
+                    onChange={(e) =>
+                      handleFieldChange(entry.id, "gradeCgpa", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
+                    placeholder="Enter your grade or CGPA"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={fieldId("start-date")}
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
+                    Start Date
+                  </label>
+                  <input
+                    id={fieldId("start-date")}
+                    type="date"
+                    value={entry.startDate || ""}
+                    onChange={(e) =>
+                      handleFieldChange(entry.id, "startDate", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={fieldId("end-date")}
+                    className="mb-2 block text-sm font-medium text-gray-700"
+                  >
+                    End Date
+                  </label>
+                  <input
+                    id={fieldId("end-date")}
+                    type="date"
+                    value={entry.endDate || ""}
+                    onChange={(e) =>
+                      handleFieldChange(entry.id, "endDate", e.target.value)
+                    }
+                    disabled={entry.currentlyAttending}
+                    className={`w-full rounded-lg border px-4 py-3 text-gray-900 outline-none ${
+                      entry.currentlyAttending
+                        ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                        : "border-gray-300 focus:border-blue-500"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="flex items-center gap-3 text-sm font-medium text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={entry.currentlyAttending}
+                    onChange={(e) =>
+                      handleCurrentlyAttendingChange(entry.id, e.target.checked)
+                    }
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  Currently Attending
+                </label>
+              </div>
+
+              <div className="mt-5">
+                <label
+                  htmlFor={fieldId("description")}
+                  className="mb-2 block text-sm font-medium text-gray-700"
                 >
-                  <Trash2 size={18} />
-                </button>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Institute Name
+                  Description
                 </label>
-                <input
-                  type="text"
-                  value={entry.instituteName || ""}
+                <textarea
+                  id={fieldId("description")}
+                  value={entry.description || ""}
                   onChange={(e) =>
-                    handleFieldChange(entry.id, "instituteName", e.target.value)
+                    handleFieldChange(entry.id, "description", e.target.value)
                   }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
-                  placeholder="Enter your institute name"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Degree Name
-                </label>
-                <input
-                  type="text"
-                  value={entry.degreeName || ""}
-                  onChange={(e) =>
-                    handleFieldChange(entry.id, "degreeName", e.target.value)
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
-                  placeholder="Enter your degree name"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Field of Study
-                </label>
-                <input
-                  type="text"
-                  value={entry.fieldOfStudy || ""}
-                  onChange={(e) =>
-                    handleFieldChange(entry.id, "fieldOfStudy", e.target.value)
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
-                  placeholder="Enter your field of study"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Grade/CGPA
-                </label>
-                <input
-                  type="text"
-                  value={entry.gradeCgpa || ""}
-                  onChange={(e) =>
-                    handleFieldChange(entry.id, "gradeCgpa", e.target.value)
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
-                  placeholder="Enter your grade or CGPA"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  value={entry.startDate || ""}
-                  onChange={(e) =>
-                    handleFieldChange(entry.id, "startDate", e.target.value)
-                  }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  value={entry.endDate || ""}
-                  onChange={(e) =>
-                    handleFieldChange(entry.id, "endDate", e.target.value)
-                  }
-                  disabled={entry.currentlyAttending}
-                  className={`w-full rounded-lg border px-4 py-3 text-gray-900 outline-none ${
-                    entry.currentlyAttending
-                      ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
-                      : "border-gray-300 focus:border-blue-500"
-                  }`}
+                  className="min-h-28 w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
+                  placeholder="Add relevant coursework, thesis, or achievements"
                 />
               </div>
             </div>
-
-            <div className="mt-4">
-              <label className="flex items-center gap-3 text-sm font-medium text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={entry.currentlyAttending}
-                  onChange={(e) =>
-                    handleCurrentlyAttendingChange(entry.id, e.target.checked)
-                  }
-                  className="h-4 w-4 rounded border-gray-300"
-                />
-                Currently Attending
-              </label>
-            </div>
-
-            <div className="mt-5">
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Description
-              </label>
-              <textarea
-                value={entry.description || ""}
-                onChange={(e) =>
-                  handleFieldChange(entry.id, "description", e.target.value)
-                }
-                className="min-h-28 w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
-                placeholder="Add relevant coursework, thesis, or achievements"
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="mt-6 flex items-center justify-between">

@@ -104,6 +104,14 @@ export default function ProfileContainer() {
   }, []);
 
   const handleUpdate = async () => {
+    const fullNameTrimmed = personalData.fullName?.trim() || "";
+    if (!fullNameTrimmed) {
+      setUpdateSuccess(false);
+      setUpdateError("Full name is required to continue");
+      setActiveSection("personal");
+      return;
+    }
+
     const educationError = validateEducations(academicData);
     if (educationError) {
       setUpdateSuccess(false);
@@ -137,9 +145,13 @@ export default function ProfileContainer() {
 
       const updateData: UserProfile = {
         personalInfo: {
-          fullName: personalData.fullName,
-          phone: personalData.phone,
-          address: personalData.address,
+          fullName: fullNameTrimmed,
+          ...(personalData.phone?.trim()
+            ? { phone: personalData.phone.trim() }
+            : {}),
+          ...(personalData.address?.trim()
+            ? { address: personalData.address.trim() }
+            : {}),
         },
         educations: serializeEducations(academicData),
         experiences: filledExperiences,

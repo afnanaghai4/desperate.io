@@ -33,12 +33,13 @@ export default function ProfileSidebar({
             key={section.id}
             type="button"
             onClick={() => onSectionChange(section.id)}
+            aria-current={activeSection === section.id ? "step" : undefined}
             className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-left font-medium transition ${getItemClasses(
               section.id
             )}`}
           >
             <span>{section.label}</span>
-            {activeSection === section.id && <span>&gt;</span>}
+            {activeSection === section.id && <span aria-hidden="true">&gt;</span>}
           </button>
         ))}
       </div>

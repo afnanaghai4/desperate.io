@@ -63,18 +63,17 @@ describe("ProfileSetupContainer", () => {
 
   it("creates a profile with educations in the payload", async () => {
     const user = userEvent.setup();
-    const { container } = render(<ProfileSetupContainer />);
+    render(<ProfileSetupContainer />);
 
     await screen.findByPlaceholderText("Enter your full name");
     await user.type(screen.getByPlaceholderText("Enter your full name"), "Afnan Aghai");
     await user.click(screen.getAllByRole("button", { name: "Continue" })[0]);
 
-    await user.type(screen.getByPlaceholderText("Enter your institute name"), "TU Berlin");
-    await user.type(screen.getByPlaceholderText("Enter your degree name"), "MSc");
-    await user.type(screen.getByPlaceholderText("Enter your field of study"), "Computer Science");
-    const dateInputs = container.querySelectorAll('input[type="date"]');
-    await user.type(dateInputs[0] as HTMLInputElement, "2021-10-01");
-    await user.type(dateInputs[1] as HTMLInputElement, "2023-09-30");
+    await user.type(screen.getByLabelText("Institute Name"), "TU Berlin");
+    await user.type(screen.getByLabelText("Degree Name"), "MSc");
+    await user.type(screen.getByLabelText("Field of Study"), "Computer Science");
+    await user.type(screen.getByLabelText("Start Date"), "2021-10-01");
+    await user.type(screen.getByLabelText("End Date"), "2023-09-30");
     await user.type(screen.getByPlaceholderText("Enter your grade or CGPA"), "1.7");
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: "Complete" }));

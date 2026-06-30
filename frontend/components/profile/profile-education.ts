@@ -5,7 +5,7 @@ export const REQUIRED_EDUCATION_ERROR =
   "At least one education is required to continue.";
 
 export const INVALID_EDUCATION_ERROR =
-  "Institute name, degree name, field of study, start date, and end date are required for each education.";
+  "Institute name, degree name, field of study, and start date are required for each education. End date is required unless you are currently attending, and it cannot be before the start date.";
 
 export function createEmptyAcademicEntry(id = String(Date.now())): AcademicFormData {
   return {
@@ -28,17 +28,21 @@ export function normalizeEducations(
     return [createEmptyAcademicEntry("0")];
   }
 
-  return educations.map((education, index) => ({
-    id: String(index),
-    instituteName: education.instituteName || "",
-    degreeName: education.degreeName || "",
-    fieldOfStudy: education.fieldOfStudy || "",
-    startDate: education.startDate || "",
-    endDate: education.endDate || "",
-    currentlyAttending: Boolean(education.currentlyAttending),
-    gradeCgpa: education.gradeCgpa || "",
-    description: education.description || "",
-  }));
+  return educations.map((education, index) => {
+    const currentlyAttending = Boolean(education.currentlyAttending);
+
+    return {
+      id: String(index),
+      instituteName: education.instituteName || "",
+      degreeName: education.degreeName || "",
+      fieldOfStudy: education.fieldOfStudy || "",
+      startDate: education.startDate || "",
+      endDate: currentlyAttending ? "" : education.endDate || "",
+      currentlyAttending,
+      gradeCgpa: education.gradeCgpa || "",
+      description: education.description || "",
+    };
+  });
 }
 
 function trimValue(value?: string) {
@@ -59,12 +63,20 @@ function hasEducationContent(education: AcademicFormData) {
 }
 
 function isValidEducation(education: AcademicFormData) {
+  const startDate = education.startDate || "";
+  const endDate = education.endDate || "";
+  const hasChronologicalDates =
+    education.currentlyAttending ||
+    !endDate ||
+    startDate <= endDate;
+
   return Boolean(
     trimValue(education.instituteName) &&
       trimValue(education.degreeName) &&
       trimValue(education.fieldOfStudy) &&
-      education.startDate &&
-      (education.currentlyAttending || education.endDate)
+      startDate &&
+      (education.currentlyAttending || endDate) &&
+      hasChronologicalDates
   );
 }
 

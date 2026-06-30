@@ -57,9 +57,8 @@ describe("AcademicDetails", () => {
 
   it("clears and disables end date when currently attending is checked", async () => {
     const user = userEvent.setup();
-    const { container } = render(<StatefulAcademicDetails />);
-    const dateInputs = container.querySelectorAll('input[type="date"]');
-    const endDateInput = dateInputs[1] as HTMLInputElement;
+    render(<StatefulAcademicDetails />);
+    const endDateInput = screen.getByLabelText("End Date");
 
     expect(endDateInput).toHaveValue("2023-09-30");
 
