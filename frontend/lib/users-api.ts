@@ -19,9 +19,22 @@ export interface Experience {
   currentlyWorking?: boolean;
 }
 
+// Academic education interface
+export interface Education {
+  instituteName?: string;
+  degreeName?: string;
+  fieldOfStudy?: string;
+  startDate?: string;
+  endDate?: string;
+  currentlyAttending?: boolean;
+  gradeCgpa?: string;
+  description?: string;
+}
+
 // Complete user profile interface
 export interface UserProfile {
   personalInfo?: PersonalInfo;
+  educations?: Education[];
   experiences?: Experience[];
 }
 

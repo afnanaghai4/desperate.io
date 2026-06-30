@@ -1,7 +1,7 @@
 "use client";
 
 import Button from '@/components/ui/button';
-import { ProfessionalFormData } from "./profile-container";
+import { type ProfessionalFormData } from "./profile-types";
 import { Trash2 } from "lucide-react";
 
 
