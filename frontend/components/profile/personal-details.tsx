@@ -1,5 +1,5 @@
 import Button from '@/components/ui/button';
-import { PersonalFormData } from './profile-container';
+import { type PersonalFormData } from './profile-types';
 import React from 'react';
 
 interface PersonalDetailsProps {

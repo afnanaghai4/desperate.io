@@ -1,103 +1,100 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
 
-import ProfileSidebar from './profile-sidebar';
-import ProfessionalDetails from './professional-details';
-import PersonalDetails from './personal-details';
+import AcademicDetails from "./academic-details";
+import PersonalDetails from "./personal-details";
+import ProfessionalDetails from "./professional-details";
+import ProfileSidebar from "./profile-sidebar";
+import {
+  normalizeEducations,
+  serializeEducations,
+  validateEducations,
+} from "./profile-education";
+import {
+  type AcademicFormData,
+  type PersonalFormData,
+  type ProfessionalFormData,
+  type ProfileSection,
+} from "./profile-types";
 
-import { getProfile, updateProfile, type UserProfile, type Experience } from '@/lib/users-api';
+import { getProfile, updateProfile, type UserProfile } from "@/lib/users-api";
 
-type ProfileSection = 'personal' | 'professional';
-
-export interface PersonalFormData {
-  fullName: string;
-  email: string;
-  username?: string;
-  phone: string;
-  address: string;
-}
-
-export interface ProfessionalFormData extends Experience {
-  id: string;
-}
+const defaultProfessionalData: ProfessionalFormData[] = [
+  {
+    id: "0",
+    currentPosition: "",
+    company: "",
+    experience: "",
+    skills: "",
+    startDate: "",
+    endDate: "",
+    currentlyWorking: false,
+  },
+];
 
 export default function ProfileContainer() {
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
-  const [updateError, setUpdateError] = useState('');
+  const [loadError, setLoadError] = useState("");
+  const [updateError, setUpdateError] = useState("");
   const [updateSuccess, setUpdateSuccess] = useState(false);
-  
-  const [activeSection, setActiveSection] = useState<ProfileSection>('personal');
+
+  const [activeSection, setActiveSection] =
+    useState<ProfileSection>("personal");
 
   const [personalData, setPersonalData] = useState<PersonalFormData>({
-    fullName: '',
-    email: '',
-    username: '',
-    phone: '',
-    address: '',
+    fullName: "",
+    email: "",
+    username: "",
+    phone: "",
+    address: "",
   });
 
-  const [professionalData, setProfessionalData] = useState<ProfessionalFormData[]>([
-    {
-      id: '0',
-      currentPosition: '',
-      company: '',
-      experience: '',
-      skills: '',
-      startDate: '',
-      endDate: '',
-      currentlyWorking: false,
-    },
-  ]);
-  
-  // Load profile on mount
+  const [academicData, setAcademicData] = useState<AcademicFormData[]>(
+    normalizeEducations()
+  );
+  const [professionalData, setProfessionalData] =
+    useState<ProfessionalFormData[]>(defaultProfessionalData);
+
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        console.log('📥 Fetching profile...');
         const response = await getProfile();
-        
         const profileDetails = response.data.profileDetails;
-        
-        // Check if profileDetails exists and is not null
+
         if (!profileDetails) {
-          console.log('ℹ️ No profile data found - new account, using empty defaults');
           setLoading(false);
           return;
         }
 
-        // Extract personal info from nested structure
         const personalInfo = profileDetails.personalInfo || {};
-        
-        const emailFromResponse = response.data.email || '';
-        
-        const newPersonalData = {
-          fullName: personalInfo.fullName || '',
-          email: emailFromResponse,
-          username: response.data.username || '',
-          phone: personalInfo.phone || '',
-          address: personalInfo.address || '',
-        };
-        setPersonalData(newPersonalData);
 
-        // Extract experiences array
-        if (profileDetails.experiences && Array.isArray(profileDetails.experiences) && profileDetails.experiences.length > 0) {
-          console.log('📝 Setting professional data from experiences array');
+        setPersonalData({
+          fullName: personalInfo.fullName || "",
+          email: response.data.email || "",
+          username: response.data.username || "",
+          phone: personalInfo.phone || "",
+          address: personalInfo.address || "",
+        });
+
+        setAcademicData(normalizeEducations(profileDetails.educations));
+
+        if (
+          Array.isArray(profileDetails.experiences) &&
+          profileDetails.experiences.length > 0
+        ) {
           setProfessionalData(
-            profileDetails.experiences.map((exp, idx) => ({
-              id: String(idx),
-              ...exp,
+            profileDetails.experiences.map((experience, index) => ({
+              id: String(index),
+              ...experience,
             }))
           );
-        } else {
-          console.log('ℹ️ No existing experiences found');
         }
 
         setLoading(false);
       } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : 'Failed to load profile';
-        console.error('❌ Error loading profile:', errorMsg);
+        const errorMsg =
+          err instanceof Error ? err.message : "Failed to load profile";
         setLoadError(errorMsg);
         setLoading(false);
       }
@@ -107,63 +104,72 @@ export default function ProfileContainer() {
   }, []);
 
   const handleUpdate = async () => {
+    const educationError = validateEducations(academicData);
+    if (educationError) {
+      setUpdateSuccess(false);
+      setUpdateError(educationError);
+      setActiveSection("academic");
+      return;
+    }
+
     try {
-      setUpdateError(''); // Clear previous update errors
-      
-      // Filter out empty experiences (exclude placeholder rows with all empty fields)
+      setUpdateError("");
+
       const filledExperiences = professionalData
-        .filter(exp => 
-          exp.currentPosition?.trim() || 
-          exp.company?.trim() || 
-          exp.experience?.trim() || 
-          exp.skills?.trim() ||
-          exp.startDate ||
-          exp.currentlyWorking
+        .filter(
+          (experience) =>
+            experience.currentPosition?.trim() ||
+            experience.company?.trim() ||
+            experience.experience?.trim() ||
+            experience.skills?.trim() ||
+            experience.startDate ||
+            experience.currentlyWorking
         )
-        .map(exp => ({
-          currentPosition: exp.currentPosition,
-          company: exp.company,
-          experience: exp.experience,
-          skills: exp.skills,
-          startDate: exp.startDate,
-          endDate: exp.endDate,
-          currentlyWorking: exp.currentlyWorking,
+        .map((experience) => ({
+          currentPosition: experience.currentPosition,
+          company: experience.company,
+          experience: experience.experience,
+          skills: experience.skills,
+          startDate: experience.startDate,
+          endDate: experience.endDate,
+          currentlyWorking: experience.currentlyWorking,
         }));
-      
+
       const updateData: UserProfile = {
         personalInfo: {
           fullName: personalData.fullName,
           phone: personalData.phone,
           address: personalData.address,
-          // ← Exclude email (it's a separate DB column)
         },
+        educations: serializeEducations(academicData),
         experiences: filledExperiences,
       };
+
       await updateProfile(updateData);
-      setUpdateError('');
+      setUpdateError("");
       setUpdateSuccess(true);
-      
-      // Auto-dismiss success message after 3 seconds
+
       setTimeout(() => {
         setUpdateSuccess(false);
       }, 3000);
-      
-      console.log('✓ Profile updated');
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Update failed';
+      const errorMsg = err instanceof Error ? err.message : "Update failed";
       setUpdateError(errorMsg);
       setUpdateSuccess(false);
-      alert(`✗ Error: ${errorMsg}`);
-        console.error('❌ Update error:', errorMsg);
+      alert(`Error: ${errorMsg}`);
     }
   };
 
-  const gotoNextSection = () => {
-    setActiveSection('professional');
+  const gotoAcademicSection = () => {
+    setActiveSection("academic");
   };
 
-  const gotoPreviousSection = () => {
-    setActiveSection('personal');
+  const gotoProfessionalSection = () => {
+    setActiveSection("professional");
+  };
+
+  const gotoPersonalSection = () => {
+    setActiveSection("personal");
   };
 
   if (loading) {
@@ -171,7 +177,9 @@ export default function ProfileContainer() {
       <main className="flex-1 px-6 py-10">
         <div className="text-center">
           <div className="text-lg text-gray-700">Loading profile...</div>
-          <div className="mt-2 text-sm text-gray-500">Please wait while we fetch your data</div>
+          <div className="mt-2 text-sm text-gray-500">
+            Please wait while we fetch your data
+          </div>
         </div>
       </main>
     );
@@ -181,7 +189,9 @@ export default function ProfileContainer() {
     return (
       <main className="flex-1 px-6 py-10">
         <div className="rounded-lg bg-red-50 p-4">
-          <div className="font-semibold text-red-800">Error loading profile:</div>
+          <div className="font-semibold text-red-800">
+            Error loading profile:
+          </div>
           <div className="mt-2 text-red-700">{loadError}</div>
           <div className="mt-4 text-sm text-red-600">
             <p>Make sure:</p>
@@ -199,8 +209,10 @@ export default function ProfileContainer() {
   return (
     <main className="flex-1 px-6 py-10">
       {updateSuccess && (
-        <div className="mb-6 rounded-lg bg-green-50 p-4 border border-green-200">
-          <p className="text-sm font-medium text-green-800">✓ Profile updated successfully!</p>
+        <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4">
+          <p className="text-sm font-medium text-green-800">
+            Profile updated successfully!
+          </p>
         </div>
       )}
       <div className="mx-auto flex w-full max-w-6xl gap-6">
@@ -217,16 +229,24 @@ export default function ProfileContainer() {
               data={personalData}
               setData={setPersonalData}
               onUpdate={handleUpdate}
-              onContinue={gotoNextSection}
+              onContinue={gotoAcademicSection}
               error={updateError}
-              readOnlyFields={['email', 'username']}
+              readOnlyFields={["email", "username"]}
+            />
+          ) : activeSection === "academic" ? (
+            <AcademicDetails
+              data={academicData}
+              setData={setAcademicData}
+              onContinue={gotoProfessionalSection}
+              onGoBack={gotoPersonalSection}
+              error={updateError}
             />
           ) : (
             <ProfessionalDetails
               data={Array.isArray(professionalData) ? professionalData : []}
               setData={setProfessionalData}
               onUpdate={handleUpdate}
-              onGoBack={gotoPreviousSection}
+              onGoBack={gotoAcademicSection}
               error={updateError}
             />
           )}
