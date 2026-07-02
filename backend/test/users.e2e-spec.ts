@@ -266,6 +266,27 @@ describe('Users/Profile (e2e)', () => {
         experiences: 'not-an-array',
       })
       .expect(400);
+
+    await createTestRequest(app)
+      .post('/users/profile')
+      .set('Authorization', `Bearer ${userTwoToken}`)
+      .send({
+        educations: 'not-an-array',
+      })
+      .expect(400);
+
+    await createTestRequest(app)
+      .patch('/users/profile')
+      .set('Authorization', `Bearer ${userOneToken}`)
+      .send({
+        educations: [
+          {
+            instituteName: 'Invalid Boolean University',
+            currentlyAttending: 'yes',
+          },
+        ],
+      })
+      .expect(400);
   });
 
   it('does not trust userId from the request body', async () => {
