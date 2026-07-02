@@ -60,6 +60,42 @@ export class ExperienceDto {
   [key: string]: any;
 }
 
+export class EducationDto {
+  @IsOptional()
+  @IsString()
+  instituteName?: string;
+
+  @IsOptional()
+  @IsString()
+  degreeName?: string;
+
+  @IsOptional()
+  @IsString()
+  fieldOfStudy?: string;
+
+  @IsOptional()
+  @IsString()
+  startDate?: string;
+
+  @IsOptional()
+  @IsString()
+  endDate?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  currentlyAttending?: boolean;
+
+  @IsOptional()
+  @IsString()
+  gradeCgpa?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  [key: string]: any;
+}
+
 // Overall profile update DTO
 export class UpdateProfileDto {
   @IsOptional()
@@ -72,6 +108,12 @@ export class UpdateProfileDto {
   @ValidateNested({ each: true })
   @Type(() => ExperienceDto)
   experiences?: ExperienceDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => EducationDto)
+  educations?: EducationDto[];
 
   [key: string]: any;
 }

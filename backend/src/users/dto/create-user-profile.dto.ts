@@ -106,6 +106,42 @@ export class CreateExperienceDto {
   [key: string]: any;
 }
 
+export class CreateEducationDto {
+  @IsOptional()
+  @IsString()
+  instituteName?: string;
+
+  @IsOptional()
+  @IsString()
+  degreeName?: string;
+
+  @IsOptional()
+  @IsString()
+  fieldOfStudy?: string;
+
+  @IsOptional()
+  @IsString()
+  startDate?: string;
+
+  @IsOptional()
+  @IsString()
+  endDate?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  currentlyAttending?: boolean;
+
+  @IsOptional()
+  @IsString()
+  gradeCgpa?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  [key: string]: any;
+}
+
 export class CreateProfileDto {
   @IsOptional()
   @ValidateNested()
@@ -117,6 +153,12 @@ export class CreateProfileDto {
   @ValidateNested({ each: true })
   @Type(() => CreateExperienceDto)
   experiences?: CreateExperienceDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateEducationDto)
+  educations?: CreateEducationDto[];
 
   [key: string]: any;
 }
