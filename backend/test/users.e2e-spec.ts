@@ -137,6 +137,18 @@ describe('Users/Profile (e2e)', () => {
             currentlyWorking: true,
           },
         ],
+        educations: [
+          {
+            instituteName: 'Technical University Berlin',
+            degreeName: 'Master of Science',
+            fieldOfStudy: 'Computer Science',
+            startDate: '2022-10-01',
+            endDate: '2024-09-30',
+            currentlyAttending: false,
+            gradeCgpa: '1.7',
+            description: 'Distributed systems and backend engineering',
+          },
+        ],
       })
       .expect(201);
 
@@ -155,6 +167,18 @@ describe('Users/Profile (e2e)', () => {
           experience: '3 years',
           skills: 'NestJS, PostgreSQL',
           currentlyWorking: true,
+        },
+      ],
+      educations: [
+        {
+          instituteName: 'Technical University Berlin',
+          degreeName: 'Master of Science',
+          fieldOfStudy: 'Computer Science',
+          startDate: '2022-10-01',
+          endDate: '2024-09-30',
+          currentlyAttending: false,
+          gradeCgpa: '1.7',
+          description: 'Distributed systems and backend engineering',
         },
       ],
     });
@@ -178,6 +202,17 @@ describe('Users/Profile (e2e)', () => {
           fullName: 'Updated Profile User One',
           phone: '+4922222222',
         },
+        educations: [
+          {
+            instituteName: 'Humboldt University',
+            degreeName: 'Bachelor of Science',
+            fieldOfStudy: 'Software Engineering',
+            startDate: '2018-10-01',
+            currentlyAttending: true,
+            gradeCgpa: '2.0',
+            description: 'Backend and database coursework',
+          },
+        ],
       })
       .expect(200);
 
@@ -196,6 +231,17 @@ describe('Users/Profile (e2e)', () => {
           experience: '3 years',
           skills: 'NestJS, PostgreSQL',
           currentlyWorking: true,
+        },
+      ],
+      educations: [
+        {
+          instituteName: 'Humboldt University',
+          degreeName: 'Bachelor of Science',
+          fieldOfStudy: 'Software Engineering',
+          startDate: '2018-10-01',
+          currentlyAttending: true,
+          gradeCgpa: '2.0',
+          description: 'Backend and database coursework',
         },
       ],
     });
@@ -272,6 +318,17 @@ describe('Users/Profile (e2e)', () => {
       fullName: 'Updated Profile User One',
       phone: '+4922222222',
     });
+    expect(userOneBody.data.profileDetails?.educations).toEqual([
+      {
+        instituteName: 'Humboldt University',
+        degreeName: 'Bachelor of Science',
+        fieldOfStudy: 'Software Engineering',
+        startDate: '2018-10-01',
+        currentlyAttending: true,
+        gradeCgpa: '2.0',
+        description: 'Backend and database coursework',
+      },
+    ]);
     expect(userTwoBody.data.email).toBe(userTwoEmail);
     expect(userTwoBody.data.profileDetails).toEqual({
       personalInfo: {
