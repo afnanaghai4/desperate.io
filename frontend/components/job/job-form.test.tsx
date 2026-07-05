@@ -250,6 +250,26 @@ describe("JobForm", () => {
     expect(defaultProps.onAnalysisComplete).toHaveBeenCalledWith(analysis);
   });
 
+  it("keeps the go back label while analysis is loading", async () => {
+    const user = userEvent.setup();
+    let resolveAnalysis: (value: JobAnalysisResponse) => void = () => {};
+    analyzeJobMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveAnalysis = resolve;
+      }),
+    );
+    render(<JobForm {...defaultProps} mode="ANALYZE" jobData={savedTextJob} />);
+
+    await user.click(screen.getByRole("button", { name: "Analyze job description" }));
+
+    expect(screen.getByRole("button", { name: "Analyzing job description" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Go Back" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Analyzing..." })).not.toBeInTheDocument();
+
+    resolveAnalysis(analysis);
+    await waitFor(() => expect(defaultProps.onAnalysisComplete).toHaveBeenCalledWith(analysis));
+  });
+
   it("disables analysis in ANALYZE mode when analysis already exists", async () => {
     const user = userEvent.setup();
     render(<JobForm {...defaultProps} mode="ANALYZE" jobData={savedTextJob} hasAnalysis />);
