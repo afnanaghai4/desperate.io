@@ -6,6 +6,7 @@ import Link from 'next/link';
 
 import { loginUser, checkAuth } from '@/lib/auth-api';
 import { getProfile } from '@/lib/users-api';
+import { isProfileComplete } from '@/lib/profile-completeness';
 import AuthCard from '../ui/auth-card';
 import InputField from '../ui/input-field';
 import AuthButton from '../ui/auth-button';
@@ -67,10 +68,9 @@ export default function LoginForm() {
     try {
       // Check if user has completed profile setup
       const profileResponse = await getProfile();
-      const hasProfile = profileResponse.data.profileDetails !== null;
       
       // Redirect based on profile status
-      if (hasProfile) {
+      if (isProfileComplete(profileResponse.data)) {
         router.push('/dashboard');
       } else {
         // Profile not completed, send to setup

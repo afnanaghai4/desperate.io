@@ -8,6 +8,7 @@ import Navbar from "@/components/layout/navbar";
 import { checkAuth } from "@/lib/auth-api";
 import { isApiErrorStatus } from "@/lib/api";
 import { getProfile } from "@/lib/users-api";
+import { isProfileComplete } from "@/lib/profile-completeness";
 
 interface ProtectedShellProps {
   children: ReactNode;
@@ -43,9 +44,8 @@ export default function ProtectedShell({
 
     try {
       const response = await getProfile();
-      const hasProfile = response.data.profileDetails !== null;
 
-      if (!hasProfile) {
+      if (!isProfileComplete(response.data)) {
         setAccessState("redirecting");
         router.replace("/profile/setup");
         return;
