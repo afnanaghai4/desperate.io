@@ -57,6 +57,14 @@ Before making any changes, agents must read:
 - **Do not commit secrets or real environment values.** Use `.env.example` and `.gitignore`.
 - **If production code must change during a test task, explain why clearly.** Document in PR.
 
+## Frontend Route Protection
+
+- `ProtectedShell` is the active frontend route/profile guard.
+- Protected App Router routes are wrapped by `frontend/app/(protected)/layout.tsx`, which renders `ProtectedShell`.
+- The profile setup route uses `ProtectedShell requireProfile={false}` so authenticated users can complete onboarding.
+- `ProfileGuard` is currently redundant because it is not imported or rendered by the app. Do not add new profile-completeness behavior there unless the component is intentionally reintroduced.
+- Client-side route guards are UX flow control only. Backend JWT guards remain the security boundary for protected API routes.
+
 ## Backend Test Placement
 
 - **Unit tests:** Go beside the service/module under `backend/src/**/*.spec.ts`

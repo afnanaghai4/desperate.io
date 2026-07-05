@@ -201,6 +201,14 @@ The backend is organized as a modular monolith using NestJS best practices:
 7. **`profile/setup/page.tsx`** (Profile Setup)
    - Profile onboarding/setup flow (separate from main profile view)
 
+### Frontend Route Protection
+
+- Protected App Router routes are wrapped by `frontend/app/(protected)/layout.tsx`, which renders `ProtectedShell`.
+- Profile setup is wrapped by `frontend/app/(auth-only)/profile/setup/layout.tsx`, which renders `ProtectedShell` with `requireProfile={false}` and `showNavbar={false}`.
+- `ProtectedShell` is the active frontend route/profile guard. It checks authentication through `checkAuth()` and, when `requireProfile` is enabled, verifies profile existence through `getProfile()`.
+- `ProfileGuard` is currently redundant because it is defined but not imported or rendered by the current app route structure.
+- Client-side route guards provide user-flow routing only; backend JWT guards remain the security boundary for API access.
+
 ### Component Organization
 
 - **`components/auth/`**: Login, signup, auth-related components
@@ -256,6 +264,13 @@ Based on the code, these complete flows are implemented:
 1. **Get Profile** → `GET /users/profile` (protected) → returns user profile details
 2. **Create Profile** → `POST /users/profile` (protected) with profile data
 3. **Update Profile** → `PATCH /users/profile` (protected) with updated profile data
+
+### Protected Frontend Navigation
+1. **Protected route access** → `(protected)` layout renders `ProtectedShell`
+2. **Authentication check** → `ProtectedShell` calls `checkAuth()`
+3. **Profile requirement check** → protected routes call `getProfile()` when `requireProfile` is enabled
+4. **Incomplete profile routing** → users without a complete profile are routed to `/profile/setup`
+5. **Profile setup access** → profile setup uses `ProtectedShell requireProfile={false}` so authenticated users can complete onboarding
 
 ### Job Management Flow
 1. **Create Job** → `POST /jobs` (protected) with job text or link

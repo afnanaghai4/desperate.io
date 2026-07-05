@@ -113,7 +113,8 @@ desperate.io/
 - User registration and login
 - JWT-based authentication
 - Password hashing with bcrypt
-- Protected routes
+- Protected frontend routes through `ProtectedShell`
+- Backend API protection through JWT guards
 
 ### Job Management
 - Job listing and filtering
@@ -129,6 +130,12 @@ desperate.io/
 - User profiles
 - User preferences
 - Recommendation history
+
+### Frontend Route Protection
+
+Protected frontend pages are wrapped by `ProtectedShell` through App Router layouts. The protected route group uses `frontend/app/(protected)/layout.tsx`, while profile setup uses `ProtectedShell requireProfile={false}` so authenticated users can complete onboarding before accessing the dashboard.
+
+`ProfileGuard` is not part of the active route flow. Route/profile-completeness behavior should be implemented in `ProtectedShell`, while backend JWT guards remain the security boundary for API access.
 
 ## Prerequisites
 
