@@ -22,6 +22,7 @@ Key functionality:
 - **React**: 19.2.4
 - **React DOM**: 19.2.4
 - **HTTP Client**: Custom fetch-based `apiFetch` utility with credentials support
+- **Testing**: Vitest 2 with Testing Library and jsdom
 
 ### Backend
 - **Framework**: NestJS 11 (Node.js)
@@ -53,14 +54,13 @@ desperate.io/
 │   └── workflows/
 ├── backend/                    # NestJS backend application
 │   ├── src/
-│   │   ├── app.controller.ts
 │   │   ├── app.module.ts
 │   │   ├── main.ts
 │   │   ├── auth/               # JWT authentication
 │   │   ├── users/              # User management & profiles
 │   │   ├── jobs/               # Job CRUD operations
 │   │   ├── analysis/           # Job analysis service
-│   │   ├── project-recommendation/  # Recommendation generation
+│   │   ├── project-recommendation/  # Placeholder module; persistence via analysis
 │   │   ├── ai-orchestrator/    # OpenAI API integration
 │   │   ├── health/             # Health check endpoint
 │   │   ├── entities/           # TypeORM entities
@@ -68,7 +68,10 @@ desperate.io/
 │   │   └── migrations/         # Database migrations
 │   ├── test/                   # E2E tests
 │   │   ├── helpers/            # E2E test utilities
-│   │   └── app.e2e-spec.ts
+│   │   ├── app.e2e-spec.ts
+│   │   ├── jobs.e2e-spec.ts
+│   │   ├── analysis.e2e-spec.ts
+│   │   └── users.e2e-spec.ts
 │   ├── coverage/               # Test coverage reports
 │   ├── Dockerfile
 │   ├── package.json
@@ -76,11 +79,11 @@ desperate.io/
 ├── frontend/                   # Next.js frontend application
 │   ├── app/                    # App router pages
 │   │   ├── page.tsx           # Homepage
-│   │   ├── dashboard/         # Dashboard page
-│   │   ├── jobs/              # Job management pages
+│   │   ├── (protected)/       # Protected dashboard/jobs/profile routes
+│   │   ├── (auth-only)/       # Authenticated setup routes
 │   │   ├── login/             # Login page
 │   │   ├── signup/            # Registration page
-│   │   └── profile/           # User profile page
+│   │   └── globals.css        # Global styles
 │   ├── components/            # Reusable React components
 │   │   ├── auth/
 │   │   ├── dashboard/
@@ -96,6 +99,8 @@ desperate.io/
 │   ├── types/                # TypeScript type definitions
 │   │   ├── job.ts
 │   │   └── job-analysis.ts
+│   ├── test/                 # Vitest setup and smoke test
+│   ├── vitest.config.ts
 │   ├── public/               # Static assets
 │   ├── package.json
 │   └── tsconfig.json
@@ -144,8 +149,9 @@ The backend is organized as a modular monolith using NestJS best practices:
    - Controllers: `AnalysisController`
 
 5. **ProjectRecommendationModule** (`project-recommendation/`)
-   - Project recommendation storage and retrieval
-   - Services: `ProjectRecommendationService` (exists; may be used internally or for future features)
+   - Placeholder NestJS module for future recommendation-specific endpoints/services
+   - Recommendation persistence is currently handled by `AnalysisService` while saving analysis results
+   - Services: `ProjectRecommendationService` (currently empty)
    - Controllers: `ProjectRecommendationController` (currently has no exposed endpoints)
 
 6. **AiOrchestratorModule** (`ai-orchestrator/`)
@@ -395,13 +401,21 @@ Located in `backend/src/migrations/`:
 
 ## 9. Testing Structure
 
-### Unit Tests
+### Backend Unit Tests
 
 - **Location**: Colocated beside services under `backend/src/**/*.spec.ts`
 - **Test Runner**: Jest 30
 - **Existing Tests**:
-  - `backend/src/app.controller.spec.ts` - Health endpoint test
   - `backend/src/auth/auth.service.spec.ts` - Auth service unit tests (mocking bcrypt, JWT)
+  - `backend/src/auth/dto/register.dto.spec.ts` - Registration DTO validation
+  - `backend/src/jobs/job.service.spec.ts` - Job service create/list/get/delete behavior
+  - `backend/src/jobs/dto/pipes/validate-job-input.pipe.spec.ts` - Job input validation pipe
+  - `backend/src/analysis/analysis.service.spec.ts` - Analysis persistence and recommendation replacement
+  - `backend/src/analysis/analysis.controller.spec.ts` - Analysis controller behavior with mocked dependencies
+  - `backend/src/analysis/job-link-extractor.service.spec.ts` - Job link extraction behavior
+  - `backend/src/users/users.service.spec.ts` - User/profile service behavior
+  - `backend/src/users/users.controller.spec.ts` - User/profile controller behavior
+  - `backend/src/common/validation/job-description.validation.spec.ts` - Job-description validation helper
 
 **Configuration** (Jest in `backend/package.json`):
 - Root dir: `src/`
@@ -425,11 +439,29 @@ Located in `backend/src/migrations/`:
 - Auth login flow
 - Auth protected endpoint (`/auth/me`)
 - Health endpoint
+- Jobs create/list/detail/delete flows, including pagination, ownership checks, validation failures, and analysis flags
+- Analysis endpoint flows with mocked AI/link extraction, persistence, update/replacement behavior, malformed/failing AI responses, and ownership checks
+- Users/profile create/get/update flows, validation failures, ownership scoping, and password-hash non-exposure
 - Uses test agent that maintains cookies across requests
+
+### Frontend Tests
+
+- **Location**: Colocated beside frontend components/utilities and `frontend/test/`
+- **Test Runner**: Vitest 2 with jsdom
+- **Testing Libraries**: Testing Library, user-event, jest-dom
+- **Configuration**: `frontend/vitest.config.ts`
+- **Setup File**: `frontend/test/setup.ts`
+- **Existing Coverage Areas**:
+  - Auth forms and `ProtectedShell`
+  - Job form, job list, jobs page content, analysis panel/layout
+  - Dashboard widgets
+  - Profile setup/container/education/academic components
+  - Profile completeness utility
+  - Basic smoke test setup
 
 ### Test Execution
 
-**Unit Tests:**
+**Backend Unit Tests:**
 ```bash
 npm test              # Run once
 npm run test:watch   # Watch mode
@@ -442,10 +474,18 @@ docker-compose up desperate_test  # In Docker
 npm run test:e2e                 # Locally (requires postgres running)
 ```
 
+**Frontend Tests:**
+```bash
+npm run test        # From frontend/
+npm run lint        # From frontend/
+npm run type-check  # From frontend/
+npm run build       # From frontend/
+```
+
 **Environment Variables:**
 - `.env` - Production/dev config
 - `.env.test` - Test config (do not commit)
-- `.env.example` - Safe template for .env
+- `frontend/.env.example` - Safe template for frontend `.env.local`
 - `.env.test.example` - Safe template for .env.test
 
 ### Test Database
@@ -509,6 +549,7 @@ npm run test:e2e                 # Locally (requires postgres running)
      - Lint (`npm run lint`)
      - Type check (`npm run type-check`)
      - Build (`npm run build`)
+   - Note: frontend Vitest tests exist but are not currently run in CI
 
 2. **Backend CI** (`backend-ci`)
    - Node.js 20
@@ -516,8 +557,8 @@ npm run test:e2e                 # Locally (requires postgres running)
    - Steps:
      - Install dependencies (`npm ci`)
      - Lint (`npm run lint`)
-     - Coverage report: `npm run test:cov -- --runInBand` (generates lcov.info)
-     - Unit tests execution: Commented out as separate step (`# npm run test -- --runInBand`), but may be included in coverage command
+     - Coverage report: `npm run test:cov -- --runInBand` (generates lcov.info and runs unit tests)
+     - Unit tests execution: Commented out as a separate step (`# npm run test -- --runInBand`) because coverage already runs them
      - E2E tests: `npm run test:e2e -- --runInBand` (runs after coverage)
      - Codecov upload: Requires `CODECOV_TOKEN` GitHub secret; `fail_ci_if_error: true` means CI fails if upload fails
      - Build: `npm run build` (final step, validates TypeScript compilation)
@@ -550,11 +591,13 @@ The application is in **running/stabilization stage** with core features impleme
 - Basic unit tests for auth service
 
 **Current Priorities (based on code analysis):**
-- Test coverage is minimal (mainly auth tests; jobs, analysis, users modules lack tests)
-- Backend unit tests should be expanded across all modules
-- Frontend testing is not yet set up
+- Test coverage has expanded across Jobs, Analysis, Users/Profile, validation helpers, and several frontend flows
+- Backend unit/e2e coverage should be reviewed for remaining gaps rather than assuming Jobs/Analysis/Users are uncovered
+- Frontend testing is set up with Vitest and Testing Library
 - Coverage thresholds not configured in CI
-- Deployment documentation appears incomplete
+- Frontend tests are not currently run in GitHub Actions CI
+- Project Recommendation has entity persistence through Analysis, but its dedicated service/controller are placeholders
+- Deployment documentation remains limited
 
 **Observations:**
 - The modular architecture is clean and follows NestJS best practices
@@ -568,16 +611,16 @@ The application is in **running/stabilization stage** with core features impleme
 Safe, focused priorities for future development:
 
 **Immediate (High Impact):**
-1. **Expand backend unit test coverage** - Jobs, analysis, users services lack tests (auth has some coverage)
-2. **Add jobs module tests** - Create, list, delete operations
-3. **Add analysis service tests** - Mocking OpenAI API responses, database persistence
-4. **Add users module tests** - Profile CRUD operations
+1. **Run and review current backend/frontend coverage** - identify real gaps from current Jest/Vitest output
+2. **Harden AI orchestrator coverage** - profile validation, malformed OpenAI responses, missing config, and no real API calls
+3. **Decide Project Recommendation module scope** - dedicated service/controller are placeholders; test only real behavior or add scoped behavior first
+4. **Add remaining focused backend edge-case tests** - only where current Jobs/Analysis/Users coverage misses meaningful behavior
 
 **Near Term:**
-5. **Configure coverage thresholds in CI** - Fail builds below threshold; currently coverage is collected but not enforced
-6. **Improve E2E test coverage** - Jobs creation/deletion, analysis flow, profile management
-7. **Add project-recommendation tests** - Entity and service tests
-8. **Add frontend component tests** - Test key user flow components
+5. **Run frontend tests in CI** - add `npm run test` to the frontend workflow when stable
+6. **Configure coverage thresholds in CI** - fail builds below agreed thresholds
+7. **Broaden frontend flow tests where needed** - completed user flows already have a foundation
+8. **Improve Docker/CI parity documentation** - clarify env files and test database setup
 
 **Future:**
 9. **Add database migration tests** - Verify migrations run correctly
@@ -602,13 +645,14 @@ Safe, focused priorities for future development:
 
 ## 14. Open Questions / Needs Verification
 
-1. **Frontend test setup** - No frontend tests are configured; is this intentional?
-2. **Coverage thresholds** - Are there minimum coverage percentage requirements?
-3. **E2E test database cleanup** - How is test data cleaned between test runs?
-4. **Deployment readiness** - Are there production deployment docs or secrets management strategy?
-5. **OpenAI API costs** - Is cost monitoring in place for API usage?
-6. **User data retention** - Are there data retention/deletion policies for user jobs and analyses?
-7. **Load testing** - Has the system been tested under load?
-8. **SSL/TLS configuration** - How is production SSL/TLS configured?
-9. **Database backup strategy** - What is the backup and restore procedure?
-10. **Rate limiting** - Are API rate limits configured?
+1. **Coverage thresholds** - Are there minimum coverage percentage requirements?
+2. **Frontend tests in CI** - Should `npm run test` be added to `frontend-ci` now that Vitest exists?
+3. **E2E test database cleanup** - Current tests use unique data; should cleanup/truncation be added?
+4. **Project Recommendation API scope** - Should the placeholder module expose endpoints or stay internal through Analysis?
+5. **Deployment readiness** - Are there production deployment docs or secrets management strategy?
+6. **OpenAI API costs** - Is cost monitoring in place for API usage?
+7. **User data retention** - Are there data retention/deletion policies for user jobs and analyses?
+8. **Load testing** - Has the system been tested under load?
+9. **SSL/TLS configuration** - How is production SSL/TLS configured?
+10. **Database backup strategy** - What is the backup and restore procedure?
+11. **Rate limiting** - Are API rate limits configured?
