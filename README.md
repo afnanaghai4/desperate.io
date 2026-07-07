@@ -1,267 +1,259 @@
 # Desperate.io
 
-A modern full-stack application designed to help job seekers enhance their relevance for software, backend, and cloud engineering positions in Germany. The platform leverages AI-driven analysis to provide intelligent project recommendations and job insights.
-
-## Overview
-
-Desperate.io is a portfolio project built to demonstrate proficiency in:
-- Full-stack development with modern frameworks
-- Backend API design and implementation
-- AI/ML integration for intelligent recommendations
-- Database design and management
-- DevOps and containerization
-- Frontend development with responsive UI
+Desperate.io is a full-stack AI-powered job and project recommendation platform for software, backend, and cloud engineering job seekers. Users can maintain a profile, save job opportunities, run job-fit analysis, and receive project recommendations tailored to the role.
 
 ## Tech Stack
 
 ### Backend
-- **Runtime**: Node.js
-- **Framework**: [NestJS](https://nestjs.com/) - A progressive Node.js framework for building efficient and scalable server-side applications
-- **Language**: TypeScript
-- **Database**: PostgreSQL with TypeORM
-- **Authentication**: JWT (JSON Web Tokens) with Passport.js
-- **AI Integration**: OpenAI API for intelligent analysis
-- **Testing**: Jest with unit and e2e tests
+
+- **Runtime**: Node.js 20
+- **Framework**: NestJS 11
+- **Language**: TypeScript 5
+- **Database**: PostgreSQL 16
+- **ORM**: TypeORM 0.3
+- **Authentication**: JWT token with Passport.js
+- **AI Integration**: OpenAI API through the `ai-orchestrator` module
+- **Testing**: Jest 30, Supertest, backend unit and e2e tests
 
 ### Frontend
-- **Framework**: [Next.js](https://nextjs.org/) 16.2.1 - React framework with server-side rendering
-- **Language**: TypeScript
+
+- **Framework**: Next.js 16 with App Router
+- **React**: React 19
+- **Language**: TypeScript 5
 - **Styling**: Tailwind CSS 4
-- **UI Components**: Lucide React icons
-- **HTTP Client**: Custom API client
+- **Icons**: Lucide React
+- **HTTP Client**: Custom fetch-based API client
+- **Testing**: Vitest 2, Testing Library, jsdom
 
 ### Infrastructure
+
 - **Containerization**: Docker
-- **Orchestration**: Docker Compose
-- **Database**: PostgreSQL 16
+- **Orchestration**: Docker Compose for PostgreSQL, backend, and backend e2e test runner
+- **CI**: GitHub Actions for frontend lint/type-check/build and backend lint/coverage/e2e/build
 
 ## Project Structure
 
-```
+```text
 desperate.io/
-├── backend/                 # NestJS backend application
-│   ├── src/
-│   │   ├── auth/           # Authentication & JWT strategy
-│   │   ├── users/          # User management
-│   │   ├── jobs/           # Job listings and management
-│   │   ├── analysis/       # Job analysis service
-│   │   ├── project-recommendation/  # AI-powered recommendations
-│   │   ├── ai-orchestrator/  # OpenAI integration
-│   │   ├── health/         # Health check endpoints
-│   │   │   ├── health.controller.ts
-│   │   │   ├── health.service.ts
-│   │   │   └── health.module.ts
-│   │   ├── entities/       # TypeORM entities
-│   │   │   ├── user.entity.ts
-│   │   │   ├── job.entity.ts
-│   │   │   ├── analysis.entity.ts
-│   │   │   └── project-recommendation.entity.ts
-│   │   ├── common/         # Shared utilities and types
-│   │   │   ├── constants/  # App constants
-│   │   │   ├── enums/      # Shared enums
-│   │   │   └── types/      # Shared type definitions
-│   │   ├── migrations/     # Database migrations
-│   │   │   └── [timestamp]-*.ts
-│   │   ├── app.controller.ts
-│   │   ├── app.module.ts
-│   │   └── main.ts
-│   ├── test/               # E2E tests
-│   │   ├── jest-e2e.json
-│   │   └── app.e2e-spec.ts
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── tsconfig.build.json
-│   ├── nest-cli.json
-│   └── Dockerfile
-│
-├── frontend/               # Next.js frontend application
-│   ├── app/               # Next.js app router pages
-│   │   ├── layout.tsx     # Root layout with providers
-│   │   ├── page.tsx       # Homepage
-│   │   ├── globals.css    # Global styles
-│   │   ├── dashboard/     # Dashboard page
-│   │   ├── jobs/          # Jobs management pages
-│   │   │   ├── page.tsx   # Job listing
-│   │   │   ├── create/    # Job creation
-│   │   │   │   └── page.tsx
-│   │   │   └── [id]/      # Job detail/analysis
-│   │   │       └── page.tsx
-│   │   ├── login/         # Login page
-│   │   │   └── page.tsx
-│   │   ├── signup/        # Registration page
-│   │   │   └── page.tsx
-│   │   └── profile/       # User profile page
-│   │       └── page.tsx
-│   ├── components/        # Reusable React components
-│   │   ├── auth/          # Authentication components
-│   │   ├── dashboard/     # Dashboard components
-│   │   ├── job/           # Job-related components
-│   │   ├── layout/        # Layout components
-│   │   └── ui/            # UI components
-│   ├── lib/               # Utility functions
-│   ├── types/             # TypeScript types
-│   ├── package.json
-│   └── tsconfig.json
-│
-├── docker-compose.yaml    # Docker Compose configuration
-└── README.md             # This file
+|-- .ai/                         # Agent context, skills, and workflows
+|-- .github/workflows/ci.yml      # GitHub Actions CI
+|-- backend/                      # NestJS backend
+|   |-- src/
+|   |   |-- ai-orchestrator/      # OpenAI integration and response validation
+|   |   |-- analysis/             # Job analysis controller/service/link extraction
+|   |   |-- auth/                 # Account access
+|   |   |-- common/               # Shared enums and validation helpers
+|   |   |-- entities/             # TypeORM entities
+|   |   |-- health/               # Health endpoint
+|   |   |-- jobs/                 # Job CRUD and input validation
+|   |   |-- migrations/           # Existing TypeORM migrations
+|   |   |-- project-recommendation/ # Placeholder module; persistence is via Analysis
+|   |   |-- users/                # User/profile management
+|   |   |-- app.module.ts
+|   |   `-- main.ts
+|   |-- test/                     # Backend e2e tests and helpers
+|   |-- TESTING.md
+|   `-- package.json
+|-- frontend/                     # Next.js frontend
+|   |-- app/                      # App Router pages, route groups, and layouts
+|   |   |-- login/
+|   |   |-- signup/
+|   |   |-- layout.tsx
+|   |   `-- page.tsx
+|   |-- components/
+|   |   |-- auth/
+|   |   |-- dashboard/
+|   |   |-- homepage/
+|   |   |-- job/
+|   |   |-- layout/
+|   |   |-- profile/
+|   |   `-- ui/
+|   |-- lib/                      # API clients and frontend utilities
+|   |-- test/                     # Vitest setup and smoke test
+|   |-- types/                    # Frontend TypeScript types
+|   |-- vitest.config.ts
+|   `-- package.json
+|-- docker-compose.yaml
+`-- README.md
 ```
 
-## Project Features
+## Implemented Features
 
-### Authentication
-- User registration and login
-- JWT-based authentication
-- Password hashing with bcrypt
-- Protected frontend routes through `ProtectedShell`
-- Backend API protection through JWT guards
-
-### Job Management
-- Job listing and filtering
-- Job creation and management
-- Job analysis using AI
-
-### AI Integration
-- OpenAI integration for intelligent analysis
-- Automated project recommendations
-- Job market insights
-
-### User Management
-- User profiles
-- User preferences
-- Recommendation history
-
-### Frontend Route Protection
-
-Protected frontend pages are wrapped by `ProtectedShell` through App Router layouts. The protected route group uses `frontend/app/(protected)/layout.tsx`, while profile setup uses `ProtectedShell requireProfile={false}` so authenticated users can complete onboarding before accessing the dashboard.
-
-`ProfileGuard` is not part of the active route flow. Route/profile-completeness behavior should be implemented in `ProtectedShell`, while backend JWT guards remain the security boundary for API access.
+- User registration, login, and logout
+- User profile create/get/update
+- Profile-completeness guided onboarding
+- Job creation from text or link
+- Job listing with pagination
+- Job detail and deletion
+- AI job-fit analysis through OpenAI
+- Re-analysis support for saved analyses
+- Project recommendations stored with analysis results
+- Backend e2e coverage for health, jobs, analysis, profile, and account flows
+- Frontend Vitest coverage for jobs, dashboard, profile, and account components
 
 ## Prerequisites
 
-- **Node.js**: v18+ (or v20+ recommended)
-- **npm**: v10+ or yarn/pnpm
-- **Docker** & **Docker Compose**: For containerized deployment
-- **PostgreSQL**: v16 (via Docker or local installation)
-- **OpenAI API Key**: For AI-powered features (optional for development)
+- Node.js 20+
+- npm 10+
+- Docker and Docker Compose
+- PostgreSQL 16, either through Docker Compose or a local installation
+- OpenAI access for running live analysis features
 
-## Installation
+## Application Areas
 
-### 1. Clone the Repository
+- **Account and Profile**: onboarding and profile data management
+- **Jobs**: create, list, inspect, and delete saved job opportunities
+- **Analysis**: evaluate job fit and persist analysis results
+- **Recommendations**: store project ideas generated from analysis results
+- **Health**: lightweight backend health check
 
-```bash
-git clone <repository-url>
-cd desperate.io
-```
+## Environment
 
-### 2. Backend Setup
+Create local environment files from the available examples and configure values for your machine. Use placeholders like `your_password` and `your_api_key`; do not use real values in documentation.
 
-Navigate to the backend directory:
-
-```bash
-cd backend
-npm install
-```
-
-Create environment configuration:
-
-```bash
-cp .env.example .env
-```
-
-Update `.env` with your configuration:
+Backend `.env` format:
 
 ```env
-# Database
+PORT=4000
+NODE_ENV=development
 DB_HOST=localhost
 DB_PORT=5432
 DB_USERNAME=postgres
 DB_PASSWORD=your_password
 DB_NAME=desperate_db
 DB_SYNC=true
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=1d
+OPENAI_API_KEY=your_api_key
+OPENAI_MODEL=your_model
+```
 
-# JWT
-JWT_SECRET=your_secret_key_here
+Backend `.env.test` format:
 
-# OpenAI
-OPENAI_API_KEY=your_openai_api_key_here
-
-# Server
+```env
 PORT=4000
-NODE_ENV=development
+NODE_ENV=test
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+DB_NAME=desperate_db_test
+DB_SYNC=true
+JWT_SECRET=your_test_jwt_secret
+JWT_EXPIRES_IN=1d
+OPENAI_API_KEY=your_api_key
+OPENAI_MODEL=your_model
 ```
 
-### 3. Frontend Setup
-
-Navigate to the frontend directory:
-
-```bash
-cd ../frontend
-npm install
-```
-
-Create environment configuration:
-
-```bash
-cp .env.example .env.local
-```
-
-Update `.env.local`:
+Frontend `.env.local` format:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
 ```
 
-## Running the Application
+Docker Compose also reads root-level variables for PostgreSQL and backend port configuration.
 
-### Option 1: Local Development (Recommended)
+## Installation
 
-#### Start PostgreSQL
-
-If using Docker:
+Clone the repository:
 
 ```bash
-docker run -d \
-  --name desperate_postgres \
-  -e POSTGRES_DB=desperate_db \
-  -e POSTGRES_USER=postgres \
-  -e POSTGRES_PASSWORD=password \
-  -p 5432:5432 \
-  postgres:16
+git clone <repository-url>
+cd desperate.io
 ```
 
-Or use your local PostgreSQL installation and ensure the database is running.
+Install dependencies:
 
-#### Start the Backend
+```bash
+cd backend
+npm install
+
+cd ../frontend
+npm install
+```
+
+Create frontend environment configuration:
+
+```bash
+cd ..
+cp frontend/.env.example frontend/.env.local
+```
+
+Create backend environment configuration in `backend/.env` using your local database and AI provider values. The test environment shape is available in `backend/.env.test.example`.
+
+## Running Locally
+
+Start PostgreSQL with Docker Compose from the repo root:
+
+```bash
+docker-compose up postgres
+```
+
+Start the backend:
 
 ```bash
 cd backend
 npm run start:dev
 ```
 
-The backend will start at `http://localhost:4000`
-
-#### Start the Frontend (in a new terminal)
+Start the frontend in another terminal:
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-The frontend will start at `http://localhost:3000`
+Default local URLs:
 
-### Option 2: Using Docker Compose
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:4000`
+- PostgreSQL: `localhost:5432`
 
-Build and start all services:
+## Frontend Development
+
+From `frontend/`:
 
 ```bash
-docker-compose up --build
+# Start the development server
+npm run dev
+
+# Run linting
+npm run lint
+
+# Run TypeScript checks
+npm run type-check
+
+# Run frontend tests
+npm run test
+
+# Build for production
+npm run build
+
+# Start the production build
+npm run start
 ```
 
-Services will be available at:
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:4000
-- **PostgreSQL**: localhost:5432
+## Docker
+
+The current `docker-compose.yaml` defines:
+
+- `postgres` - PostgreSQL 16
+- `backend` - NestJS backend
+- `desperate_test` - backend e2e test runner
+
+It does not currently define a frontend service.
+
+Run backend plus PostgreSQL:
+
+```bash
+docker-compose up --build backend
+```
+
+Run Docker-based backend e2e verification:
+
+```bash
+docker-compose up desperate_test
+```
 
 Stop services:
 
@@ -269,230 +261,139 @@ Stop services:
 docker-compose down
 ```
 
-## Development Workflow
-
-### Backend Development
-
-```bash
-cd backend
-
-# Start in watch mode (auto-restart on changes)
-npm run start:dev
-
-# Run unit tests
-npm run test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run with code coverage
-npm run test:cov
-
-# Run e2e tests
-npm run test:e2e
-
-# Lint and format code
-npm run lint
-npm run format
-
-# Build for production
-npm run build
-```
-
-### Frontend Development
-
-```bash
-cd frontend
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm run start
-
-# Run linting
-npm run lint
-
-# Type check
-npm run type-check
-```
-
-## API Endpoints
-
-### Authentication
-- `POST /auth/register` - Register a new user
-- `POST /auth/login` - Login user
-- `GET /auth/me` - Get authenticated user profile
-
-### Users
-- `GET /users/profile` - Get user profile
-- `PUT /users/profile` - Update user profile
-
-### Jobs
-- `GET /jobs` - List all jobs for authenticated user (paginated with `?skip=0&take=10`)
-- `POST /jobs` - Create a new job
-- `GET /jobs/:id` - Get job details by ID
-- `DELETE /jobs/:id` - Delete a job
-
-### Analysis
-- `POST /analysis/analyze-fit` - Analyze job fit using AI (`{ "jobId": number }`)
-
-### Health
-- `GET /health` - Health check endpoint
-
-For detailed API documentation, refer to the [backend README](backend/README.md).
-
 ## Testing
 
-### Running Backend Tests
+### Backend
+
+From `backend/`:
 
 ```bash
-cd backend
-
-# Unit tests
+npm run lint
 npm run test
-
-# E2E tests
-npm run test:e2e
-
-# Coverage report
 npm run test:cov
+npm run test:e2e
+npm run build
 ```
 
-Test files are located in `src/**/*.spec.ts` (unit tests) and `test/` (e2e tests).
-
-### Running Frontend Tests
-
-Currently, the frontend uses ESLint for code quality. Run:
+For final backend verification before review:
 
 ```bash
-cd frontend
+npm run lint
+npm run test:cov -- --runInBand
+npm run test:e2e -- --runInBand
+npm run build
+```
+
+Backend unit tests live under `backend/src/**/*.spec.ts`. Backend e2e tests live under `backend/test/**/*.e2e-spec.ts`.
+
+Current backend coverage includes account flows, job management, analysis persistence, profile operations, and validation helpers.
+
+### Frontend
+
+From `frontend/`:
+
+```bash
 npm run lint
 npm run type-check
+npm run test
+npm run build
 ```
 
-## Database Migrations
+Frontend tests use Vitest with jsdom and Testing Library. Current coverage includes account forms, job flows, dashboard widgets, profile setup, and profile-completeness utilities.
 
-The project uses TypeORM for database management.
+## CI
 
-```bash
-cd backend
+GitHub Actions currently runs:
 
-# Generate a new migration
-npm run migration:generate -- --name MigrationName
+- Frontend: `npm ci`, `npm run lint`, `npm run type-check`, `npm run build`
+- Backend: `npm ci`, `npm run lint`, `npm run test:cov -- --runInBand`, Codecov upload, `npm run test:e2e -- --runInBand`, `npm run build`
 
-# Run migrations
-npm run migration:run
+Known CI gaps:
 
-# Revert migrations
-npm run migration:revert
-```
+- Frontend Vitest tests exist but are not currently run in CI.
+- Backend coverage is reported, but repository-level coverage thresholds are not enforced.
 
-Current migrations are stored in `src/migrations/`.
+## Current Test-Coverage Priorities
 
-## Deployment
+The project is in a coverage-hardening phase. Current priorities are reviewing coverage output, filling meaningful backend and frontend gaps, adding frontend test execution to CI, and defining practical coverage thresholds.
 
-### Docker Deployment
+## Database and Migrations
 
-Build the Docker image:
+TypeORM entities are defined in `backend/src/entities/`. Migration files exist in `backend/src/migrations/`:
 
-```bash
-docker build -t desperate-io-backend ./backend
-docker build -t desperate-io-frontend ./frontend
-```
+- `1724000001000-AddAnalysisMetadataColumns.ts`
+- `1724000002000-AddFullResponseColumn.ts`
+- `1725000003000-AddExtractedKeywordsColumn.ts`
+- `1726000004000-AddProjectRecommendationColumns.ts`
 
-Or use Docker Compose for the complete stack:
+The current `backend/package.json` does not define convenience npm scripts such as `migration:run`, `migration:generate`, or `migration:revert`. Add explicit scripts or use TypeORM CLI commands deliberately if migration execution/generation work is required.
 
-```bash
-docker-compose up -d
-```
+## Development Rules
 
-### Environment Variables for Production
-
-Ensure the following environment variables are set:
-
-**Backend**:
-- `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`
-- `JWT_SECRET` (use a strong, random value)
-- `OPENAI_API_KEY`
-- `NODE_ENV=production`
-- `PORT=4000`
-
-**Frontend**:
-- `NEXT_PUBLIC_API_BASE_URL` (production API URL)
-
-## Troubleshooting
-
-### Database Connection Issues
-- Verify PostgreSQL is running and accessible
-- Check database credentials in `.env`
-- Ensure `DB_HOST`, `DB_PORT`, `DB_USERNAME`, and `DB_NAME` are correct
-
-### Port Already in Use
-- Backend: Change `PORT` in `.env` (default: 4000)
-- Frontend: Use `PORT=3001 npm run dev` to use a different port
-- PostgreSQL: Change `POSTGRES_PORT` in Docker Compose or local config (default: 5432)
-
-### OpenAI API Errors
-- Verify your `OPENAI_API_KEY` is valid
-- Check OpenAI API usage and quota
-- Ensure API key has required permissions
-
-### Missing Environment Variables
-- Run `cp .env.example .env` in the backend folder
-- Run `cp .env.example .env.local` in the frontend folder
-- Fill in all required values
-
-## Contributing
-
-1. Create a feature branch: `git checkout -b feature/your-feature`
-2. Make your changes and commit: `git commit -am 'Add your feature'`
-3. Push to the branch: `git push origin feature/your-feature`
-4. Open a pull request
+- Do not push directly to `main` or `master`.
+- Keep PRs small and focused.
+- Do not change API contracts unless explicitly requested.
+- Do not redesign the UI unless explicitly requested.
+- Preserve the NestJS modular monolith.
+- Do not introduce microservices, Kubernetes, or new infrastructure.
+- During coverage tasks, avoid production code changes unless a real bug is found and covered by a test.
 
 ## Code Quality
 
-The project uses:
-- **ESLint** for code linting
-- **Prettier** for code formatting
-- **TypeScript** for type safety
-- **Jest** for testing
+The project uses ESLint, Prettier, TypeScript, Jest, and Vitest for code quality and test coverage.
 
-Run quality checks before committing:
+Recommended checks before opening a PR:
 
 ```bash
 # Backend
 cd backend
 npm run lint
-npm run format
 npm run test
+npm run build
 
 # Frontend
-cd frontend
+cd ../frontend
 npm run lint
 npm run type-check
+npm run test
+npm run build
 ```
 
 ## Performance Considerations
 
-- API responses are optimized with pagination
-- Database queries use indexes for common lookups
-- Frontend uses Next.js optimizations (code splitting, image optimization)
-- Caching strategies implemented for API responses
+- Backend APIs use pagination for job lists.
+- Database entities and relationships are structured for user-scoped job, analysis, and recommendation data.
+- Frontend pages use the Next.js App Router with component-level organization.
+- AI analysis results are persisted so previously generated analysis can be reused or re-analyzed.
+
+## Troubleshooting
+
+### Database Connection Issues
+
+- Confirm PostgreSQL is running.
+- Check backend database variables.
+- For local e2e, ensure the test database exists if running outside Docker.
+
+### Port Already in Use
+
+- Backend: change `PORT` in the backend environment file.
+- Frontend: run Next.js on another port, for example `npm run dev -- --port 3001`.
+- PostgreSQL: change the Docker Compose PostgreSQL port variable or stop the conflicting local database process.
+
+### OpenAI Errors
+
+- Confirm your OpenAI configuration is present for real analysis runs.
+- Confirm the selected model is available for your account.
+- Check usage limits if analysis requests fail unexpectedly.
+- Tests should use mocked OpenAI behavior.
+
+### Missing Environment Variables
+
+- Create `backend/.env` for local backend runs.
+- Create `backend/.env.test` for local backend e2e tests.
+- Create `frontend/.env.local` from `frontend/.env.example`.
+- Use the formats in the Environment section and replace placeholders such as `your_password` and `your_api_key`.
 
 ## License
 
 UNLICENSED
-
-## Author
-
-Built as a portfolio project to demonstrate full-stack development capabilities.
-
----
-
-For more information or issues, please refer to:
-- [Backend README](backend/README.md)
-- [Frontend README](frontend/README.md)
