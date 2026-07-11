@@ -12,6 +12,7 @@ import { Analysis } from './entities/analysis.entity';
 import { Job } from './entities/job.entity';
 import { ProjectRecommendation } from './entities/project-recommendation.entity';
 import { User } from './entities/user.entity';
+import { PasswordCredential } from './entities/password-credential.entity';
 import { AiOrchestratorModule } from './ai-orchestrator/ai-orchestrator.module';
 
 @Module({
@@ -30,7 +31,13 @@ import { AiOrchestratorModule } from './ai-orchestrator/ai-orchestrator.module';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User, Job, ProjectRecommendation, Analysis],
+        entities: [
+          User,
+          Job,
+          ProjectRecommendation,
+          Analysis,
+          PasswordCredential,
+        ],
         synchronize: configService.get<string>('DB_SYNC') === 'true',
       }),
     }),

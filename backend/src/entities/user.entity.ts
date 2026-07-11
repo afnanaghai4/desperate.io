@@ -3,10 +3,12 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   OneToMany,
+  OneToOne,
   CreateDateColumn,
 } from 'typeorm';
 import { UserRole } from '../common/enums/user-role.enum';
 import { Job } from './job.entity';
+import { PasswordCredential } from './password-credential.entity';
 
 @Entity('users')
 export class User {
@@ -29,12 +31,15 @@ export class User {
   @Column({ type: 'jsonb', nullable: true })
   profileDetails: Record<string, any> | null;
 
-  @Column({ type: 'varchar', select: false })
-  passwordHash: string;
-
   @CreateDateColumn()
   createdAt: Date;
 
   @OneToMany(() => Job, (job) => job.user)
   jobs: Job[];
+
+  @OneToOne(
+    () => PasswordCredential,
+    (passwordCredential) => passwordCredential.user,
+  )
+  passwordCredential?: PasswordCredential;
 }
