@@ -111,7 +111,8 @@ Because there is no owned domain yet, use a temporary hostname like `<EC2_PUBLIC
 - Do not commit `.env`, OpenAI keys, JWT secrets, SSH keys, or database passwords.
 - Use a long random `JWT_SECRET`, generated locally with a secure command.
 - EC2 security group:
-  - Allow `22` SSH only from your IP.
+  - Allow `22` SSH only from your IP for manual administration.
+  - Do not open SSH broadly for GitHub-hosted runners. Use AWS SSM Session Manager, a self-hosted runner inside your controlled network, or another controlled deployment channel for CD.
   - Allow `80` and `443` from anywhere.
   - Do not allow public `5432`.
   - Do not expose backend port `4000` publicly if using reverse proxy.
@@ -128,7 +129,8 @@ Because there is no owned domain yet, use a temporary hostname like `<EC2_PUBLIC
   - Keep Docker volumes backed up.
 - Database:
   - Start with same-instance Postgres for cost.
-  - Add scheduled `pg_dump` backups to a local backup folder first.
+  - Local scheduled `pg_dump` files on the EC2 instance are local recovery snapshots only, not durable backups.
+  - For durable backups, upload encrypted dumps to separate storage such as S3 from the first real deployment.
   - Later move backups to S3 or move DB to managed Postgres.
 - OpenAI:
   - Store API key only in EC2 `.env`.
@@ -235,7 +237,13 @@ Install basics:
 ```bash
 sudo apt update
 sudo apt upgrade -y
-sudo apt install -y git docker.io docker-compose-plugin
+sudo apt install -y git ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker.asc > /dev/null
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 sudo usermod -aG docker ubuntu
 ```
 
@@ -268,9 +276,10 @@ nano backend/.env
 nano .env
 ```
 
-Start backend/Postgres:
+Before enabling the new backend version, add and run a TypeORM migration runner command for the deployed revision so schema changes are applied before traffic reaches the new code. Then start backend/Postgres:
 
 ```bash
+# run the project's TypeORM migration command here once configured
 docker compose up -d --build backend
 ```
 
@@ -313,9 +322,11 @@ Later with real domain:
 - Add backend deploy workflow triggered on push to `master`.
 - Workflow should:
   - Wait for or depend on existing CI success.
-  - SSH into EC2.
+  - Connect through the selected controlled deployment channel, such as SSM or a self-hosted runner.
   - `cd ~/desperate.io`
-  - `git fetch && git reset --hard origin/master`
+  - `git fetch origin`
+  - `git reset --hard <triggering-commit-sha>`
+  - Run the backend migration command for that exact revision before enabling traffic.
   - `docker compose up -d --build backend`
   - `docker image prune -f`
   - Run `curl http://localhost:4000/health` on the server.
@@ -324,6 +335,7 @@ Later with real domain:
   - `EC2_USER=ubuntu`
   - `EC2_SSH_KEY`
   - `EC2_APP_DIR=/home/ubuntu/desperate.io`
+- Use the workflow's triggering commit SHA as an input/variable for the deploy step; it should not be stored as a long-lived secret.
 - Do not put production `.env` values in GitHub unless moving to a deliberate secrets-management workflow.
 
 ## Test Plan

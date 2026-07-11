@@ -18,9 +18,10 @@ This note summarizes the current discussion about adding Google sign-in/sign-up 
 - Add Google as an additional identity provider, not as a replacement for email/password auth.
 - Use OpenID Connect authorization code flow through the backend.
 - Frontend Google button should redirect to a backend endpoint such as `GET /auth/google`.
-- Backend redirects the browser to Google with `state`, `nonce`, and scopes: `openid email profile`.
+- Backend generates per-attempt `state`, `nonce`, and PKCE code verifier/challenge values.
+- Backend redirects the browser to Google with `state`, `nonce`, an S256 PKCE code challenge, and scopes: `openid email profile`.
 - Google redirects back to backend callback with an authorization code.
-- Backend exchanges the code for tokens, verifies Google's ID token, then finds or creates the local user.
+- Backend validates `state`, exchanges the code with the PKCE verifier, verifies Google's ID token including `nonce`, then finds or creates the local user.
 - Backend then issues the same app JWT it already uses and sets the existing `accessToken` HTTP-only cookie.
 - Frontend receives a redirect back to `/dashboard` or `/profile/setup`.
 
@@ -42,8 +43,9 @@ This note summarizes the current discussion about adding Google sign-in/sign-up 
 
 - Verify Google ID tokens server-side.
 - Validate token signature, issuer, audience, expiry, and `email_verified`.
-- Use `state` to prevent CSRF.
-- Use `nonce` to reduce replay risk.
+- Generate `state` for each authorization attempt, bind it to the initiating browser/session, validate it during callback handling, and invalidate it after one use.
+- Generate `nonce` for each authorization attempt, bind it to the initiating browser/session, validate it during ID-token verification, and invalidate it after one use.
+- Use PKCE with S256 for the authorization-code flow, storing the code verifier server-side until the callback token exchange.
 - Keep Google client secret backend-only.
 - Use exact redirect URI allowlisting in Google Cloud.
 - Use HTTPS in production.
@@ -57,7 +59,7 @@ This note summarizes the current discussion about adding Google sign-in/sign-up 
 - Backend auth service: Google token verification, local user lookup/creation, JWT issuance.
 - Backend persistence: provider identity table/entity/migration and user creation changes.
 - Frontend login/signup forms: add "Continue with Google" button that navigates to backend OAuth start endpoint.
-- Tests: unit tests for callback/linking logic and e2e tests with mocked Google verification.
+- Tests: unit tests for callback/linking logic and e2e tests with mocked Google verification, including invalid/replayed `state`, mismatched `nonce`, invalid issuer/audience/expiry, unverified email, and same-email account blocking.
 
 ## Recommended Implementation Order
 

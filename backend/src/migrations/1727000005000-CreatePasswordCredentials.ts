@@ -85,6 +85,9 @@ export class CreatePasswordCredentials1727000005000 implements MigrationInterfac
       WHERE "users"."userId" = "password_credentials"."userId"
     `);
 
+    // This rollback assumes every user has a password credential. Once
+    // passwordless providers exist, users without credentials will make this
+    // NOT NULL restoration fail.
     await queryRunner.query(`
       ALTER TABLE "users"
       ALTER COLUMN "passwordHash" SET NOT NULL
