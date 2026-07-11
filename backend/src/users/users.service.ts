@@ -19,15 +19,6 @@ export class UsersService {
   async findbyEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { email },
-      select: {
-        userId: true,
-        username: true,
-        email: true,
-        passwordHash: true,
-        role: true,
-        createdAt: true,
-        profileDetails: true,
-      },
     });
   }
 
@@ -43,7 +34,6 @@ export class UsersService {
     const newUser = this.usersRepository.create({
       username: user.username,
       email: user.email,
-      passwordHash: user.passwordHash,
     });
     return this.usersRepository.save(newUser);
   }

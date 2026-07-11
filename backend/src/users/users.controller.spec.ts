@@ -17,7 +17,6 @@ describe('UsersController', () => {
     userId: 1,
     username: 'profile-user',
     email: 'profile@example.com',
-    passwordHash: 'hashed-password',
     profileDetails: {
       personalInfo: { fullName: 'Profile User' },
     },

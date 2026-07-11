@@ -27,7 +27,6 @@ describe('UsersService', () => {
     userId: 1,
     username: 'test-user',
     email: 'test@example.com',
-    passwordHash: 'hashed-password',
     profileDetails: null,
     role: 'user' as User['role'],
     createdAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -67,22 +66,13 @@ describe('UsersService', () => {
     jest.clearAllMocks();
   });
 
-  it('finds a user by email with password hash selected for auth', async () => {
+  it('finds a user by email', async () => {
     repository.findOne?.mockResolvedValue(user);
 
     await expect(service.findbyEmail(user.email)).resolves.toBe(user);
 
     expect(repository.findOne).toHaveBeenCalledWith({
       where: { email: user.email },
-      select: {
-        userId: true,
-        username: true,
-        email: true,
-        passwordHash: true,
-        role: true,
-        createdAt: true,
-        profileDetails: true,
-      },
     });
   });
 
@@ -115,7 +105,6 @@ describe('UsersService', () => {
       service.CreateUser({
         username: user.username,
         email: user.email,
-        passwordHash: user.passwordHash,
         profileDetails: { ignored: true },
       }),
     ).resolves.toBe(createdUser);
@@ -123,7 +112,6 @@ describe('UsersService', () => {
     expect(repository.create).toHaveBeenCalledWith({
       username: user.username,
       email: user.email,
-      passwordHash: user.passwordHash,
     });
     expect(repository.save).toHaveBeenCalledWith(createdUser);
   });
