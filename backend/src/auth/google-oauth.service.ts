@@ -67,7 +67,7 @@ export class GoogleOAuthService {
 
   private toVerifiedIdentity(payload: TokenPayload): VerifiedGoogleIdentity {
     return {
-      sub: payload.sub,
+      sub: payload.sub ?? '',
       email: payload.email ?? '',
       emailVerified: payload.email_verified === true,
       nonce: payload.nonce,
@@ -86,7 +86,9 @@ export class GoogleOAuthService {
   private getRequiredConfig(key: string): string {
     const value = this.configService.get<string>(key);
     if (!value || value.trim() === '') {
-      throw new Error(`${key} environment variable is not set or is empty`);
+      throw new InternalServerErrorException(
+        `${key} environment variable is not set or is empty`,
+      );
     }
     return value;
   }

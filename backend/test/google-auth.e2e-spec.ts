@@ -183,7 +183,7 @@ describe('Google Auth (e2e)', () => {
       .expect(302);
 
     expect(callbackResponse.headers.location).toBe(
-      'http://localhost:3000/login?authError=google_failed',
+      'http://localhost:3000/login?authError=google_email_conflict',
     );
   });
 });

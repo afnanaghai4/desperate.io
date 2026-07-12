@@ -9,6 +9,7 @@ import {
   Request,
   Res,
   HttpCode,
+  ConflictException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -98,10 +99,12 @@ export class AuthController {
       });
       this.setAccessTokenCookie(res, result.accessToken);
       return res.redirect(this.buildFrontendRedirect(result.redirectPath));
-    } catch {
-      return res.redirect(
-        this.buildFrontendRedirect('/login', 'google_failed'),
-      );
+    } catch (error) {
+      const authError =
+        error instanceof ConflictException
+          ? 'google_email_conflict'
+          : 'google_failed';
+      return res.redirect(this.buildFrontendRedirect('/login', authError));
     }
   }
 
@@ -118,9 +121,7 @@ export class AuthController {
   logout(@Res() res: Response) {
     // Clear the HTTP-only cookie by setting Max-Age=0
     // This tells the browser to delete the cookie
-    res.clearCookie('accessToken', {
-      path: '/',
-    });
+    res.clearCookie('accessToken', this.getAccessTokenCookieOptions());
 
     return res.json({
       message: 'Logout successful',
@@ -128,14 +129,20 @@ export class AuthController {
   }
 
   private setAccessTokenCookie(res: Response, accessToken: string): void {
-    const isProduction = process.env.NODE_ENV === 'production';
     res.cookie('accessToken', accessToken, {
+      ...this.getAccessTokenCookieOptions(),
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+  }
+
+  private getAccessTokenCookieOptions() {
+    const isProduction = process.env.NODE_ENV === 'production';
+    return {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? 'strict' : 'lax',
       path: '/',
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+    } as const;
   }
 
   private buildFrontendRedirect(path: string, authError?: string): string {

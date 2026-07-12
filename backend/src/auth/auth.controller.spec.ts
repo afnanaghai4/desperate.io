@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { ConflictException } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
@@ -19,6 +20,8 @@ describe('AuthController', () => {
     response = {
       redirect: jest.fn(),
       cookie: jest.fn(),
+      clearCookie: jest.fn(),
+      json: jest.fn(),
     };
     controller = new AuthController(authService as unknown as AuthService);
   });
@@ -97,5 +100,39 @@ describe('AuthController', () => {
     expect(response.redirect).toHaveBeenCalledWith(
       'http://localhost:3000/login?authError=google_failed',
     );
+  });
+
+  it('redirects to a distinct error when Google email conflicts with an existing account', async () => {
+    authService.handleGoogleCallback.mockRejectedValue(
+      new ConflictException('account exists'),
+    );
+
+    await controller.googleCallback(
+      'code',
+      'state',
+      undefined,
+      response as unknown as Response,
+    );
+
+    expect(response.redirect).toHaveBeenCalledWith(
+      'http://localhost:3000/login?authError=google_email_conflict',
+    );
+  });
+
+  it('clears the access token cookie with matching auth cookie options', () => {
+    controller.logout(response as unknown as Response);
+
+    expect(response.clearCookie).toHaveBeenCalledWith(
+      'accessToken',
+      expect.objectContaining({
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: false,
+        path: '/',
+      }),
+    );
+    expect(response.json).toHaveBeenCalledWith({
+      message: 'Logout successful',
+    });
   });
 });
