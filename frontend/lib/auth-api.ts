@@ -62,7 +62,7 @@ export async function checkAuth(): Promise<UserInfo | null> {
 }
 
 export function getGoogleLoginUrl(): string {
-    return `${API_BASE_URL}/auth/google`;
+    return `${API_BASE_URL.replace(/\/+$/, '')}/auth/google`;
 }
 
 export function startGoogleLogin(): void {
