@@ -4,6 +4,7 @@ import {
   Post,
   Req,
   Get,
+  Query,
   UseGuards,
   Request,
   Res,
@@ -29,14 +30,7 @@ export class AuthController {
     const result = await this.authService.register(RegisterDto);
 
     // Set HTTP-only cookie with the JWT token (same as login)
-    const isProduction = process.env.NODE_ENV === 'production';
-    res.cookie('accessToken', result.data.accessToken, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'strict' : 'lax',
-      path: '/',
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+    this.setAccessTokenCookie(res, result.data.accessToken);
 
     // Return response without token in body (it's in the secure cookie)
     const includeTokenInResponse = process.env.NODE_ENV !== 'production';
@@ -60,14 +54,7 @@ export class AuthController {
     // sameSite: 'lax' → Cookie sent in same-site requests and top-level navigations
     // path: '/' → Cookie sent with all requests
     // maxAge: 24 hours expiry
-    const isProduction = process.env.NODE_ENV === 'production';
-    res.cookie('accessToken', result.data.accessToken, {
-      httpOnly: true,
-      secure: isProduction, // Allow localhost in dev/test, require HTTPS in production
-      sameSite: isProduction ? 'strict' : 'lax', // Use 'lax' for dev/test to allow supertest
-      path: '/',
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    });
+    this.setAccessTokenCookie(res, result.data.accessToken);
 
     // Don't send the token in the response body anymore
     // It's now in the HTTP-only cookie (secure)
@@ -83,6 +70,39 @@ export class AuthController {
         ...(includeTokenInResponse && { accessToken: result.data.accessToken }),
       },
     });
+  }
+
+  @Get('google')
+  async startGoogleLogin(@Res() res: Response) {
+    const result = await this.authService.startGoogleLogin();
+    return res.redirect(result.authorizationUrl);
+  }
+
+  @Get('google/callback')
+  async googleCallback(
+    @Query('code') code: string | undefined,
+    @Query('state') state: string | undefined,
+    @Query('error') error: string | undefined,
+    @Res() res: Response,
+  ) {
+    if (error || !code || !state) {
+      return res.redirect(
+        this.buildFrontendRedirect('/login', 'google_failed'),
+      );
+    }
+
+    try {
+      const result = await this.authService.handleGoogleCallback({
+        code,
+        state,
+      });
+      this.setAccessTokenCookie(res, result.accessToken);
+      return res.redirect(this.buildFrontendRedirect(result.redirectPath));
+    } catch {
+      return res.redirect(
+        this.buildFrontendRedirect('/login', 'google_failed'),
+      );
+    }
   }
 
   @UseGuards(JwtAuthGuard)
@@ -105,5 +125,25 @@ export class AuthController {
     return res.json({
       message: 'Logout successful',
     });
+  }
+
+  private setAccessTokenCookie(res: Response, accessToken: string): void {
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'strict' : 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+  }
+
+  private buildFrontendRedirect(path: string, authError?: string): string {
+    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
+    const redirectUrl = new URL(path, frontendUrl);
+    if (authError) {
+      redirectUrl.searchParams.set('authError', authError);
+    }
+    return redirectUrl.toString();
   }
 }

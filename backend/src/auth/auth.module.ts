@@ -7,12 +7,19 @@ import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './jwt.strategy';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PasswordCredential } from '../entities/password-credential.entity';
+import { AuthAccount } from '../entities/auth-account.entity';
+import { OAuthLoginAttempt } from '../entities/oauth-login-attempt.entity';
+import { GoogleOAuthService } from './google-oauth.service';
 
 @Module({
   imports: [
     ConfigModule,
     UsersModule,
-    TypeOrmModule.forFeature([PasswordCredential]),
+    TypeOrmModule.forFeature([
+      PasswordCredential,
+      AuthAccount,
+      OAuthLoginAttempt,
+    ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -34,6 +41,6 @@ import { PasswordCredential } from '../entities/password-credential.entity';
   ],
 
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, GoogleOAuthService],
 })
 export class AuthModule {}
