@@ -126,6 +126,10 @@ JWT_SECRET=your_jwt_secret
 JWT_EXPIRES_IN=1d
 OPENAI_API_KEY=your_api_key
 OPENAI_MODEL=your_model
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:4000/auth/google/callback
+FRONTEND_URL=http://localhost:3000
 ```
 
 Backend `.env.test` format:
@@ -143,6 +147,10 @@ JWT_SECRET=your_test_jwt_secret
 JWT_EXPIRES_IN=1d
 OPENAI_API_KEY=your_api_key
 OPENAI_MODEL=your_model
+GOOGLE_CLIENT_ID=your_test_google_client_id
+GOOGLE_CLIENT_SECRET=your_test_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:4000/auth/google/callback
+FRONTEND_URL=http://localhost:3000
 ```
 
 Frontend `.env.local` format:

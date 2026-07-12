@@ -13,6 +13,8 @@ import { Job } from './entities/job.entity';
 import { ProjectRecommendation } from './entities/project-recommendation.entity';
 import { User } from './entities/user.entity';
 import { PasswordCredential } from './entities/password-credential.entity';
+import { AuthAccount } from './entities/auth-account.entity';
+import { OAuthLoginAttempt } from './entities/oauth-login-attempt.entity';
 import { AiOrchestratorModule } from './ai-orchestrator/ai-orchestrator.module';
 
 @Module({
@@ -37,6 +39,8 @@ import { AiOrchestratorModule } from './ai-orchestrator/ai-orchestrator.module';
           ProjectRecommendation,
           Analysis,
           PasswordCredential,
+          AuthAccount,
+          OAuthLoginAttempt,
         ],
         synchronize: configService.get<string>('DB_SYNC') === 'true',
       }),

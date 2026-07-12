@@ -9,6 +9,7 @@ import {
 import { UserRole } from '../common/enums/user-role.enum';
 import { Job } from './job.entity';
 import { PasswordCredential } from './password-credential.entity';
+import { AuthAccount } from './auth-account.entity';
 
 @Entity('users')
 export class User {
@@ -42,4 +43,7 @@ export class User {
     (passwordCredential) => passwordCredential.user,
   )
   passwordCredential?: PasswordCredential;
+
+  @OneToMany(() => AuthAccount, (authAccount) => authAccount.user)
+  authAccounts?: AuthAccount[];
 }

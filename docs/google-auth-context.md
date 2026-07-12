@@ -123,4 +123,37 @@ This note summarizes the current discussion about adding Google sign-in/sign-up 
   - Removed password hash mapping from `User`.
   - Updated email/password register/login to store and read password hashes through password credentials.
   - Registration now creates the user and password credential in one transaction.
-  - Existing public auth endpoints remain unchanged.
+- Existing public auth endpoints remain unchanged.
+
+## PR 2 Clarifications From Follow-Up Discussion
+
+- `PasswordCredential` from PR #88 is not just a rename of `passwordHash`.
+  It separates email/password login from the core `users` record so a user can
+  exist without a password hash.
+- Google sign-in still needs separate provider identity persistence. This maps
+  Google's stable `sub` claim to the local `users.userId`, for example through
+  an `auth_accounts` table.
+- The expected account shapes after PR 2 are:
+  - email/password user: `users` row + `password_credentials` row
+  - Google-only user: `users` row + `auth_accounts` row
+  - future linked user: `users` row + both credential/account rows
+- Entity changes that affect persisted schema must include explicit migration
+  scripts under `backend/src/migrations`; do not change the database manually
+  and do not rely on TypeORM synchronize as the schema-change mechanism.
+- The project remains industry-standard without Redis or a session layer. For
+  this modular monolith, DB-backed OAuth attempt storage in PostgreSQL is a
+  valid way to store short-lived `state`, `nonce`, and PKCE verifier values.
+- Redis or server-side sessions can be considered later if the app needs
+  distributed session management, high-volume short-lived state, centralized
+  rate limiting, queues, or caching.
+- Manual local testing after PR 2 should use real Google credentials only in
+  `backend/.env`, with Google Cloud configured for
+  `http://localhost:4000/auth/google/callback`. Automated tests must mock
+  Google and must not make real network calls.
+- Expected local manual flow after backend implementation:
+  1. start Postgres with `docker-compose up postgres`
+  2. start backend with `npm run start:dev`
+  3. start frontend with `npm run dev`
+  4. visit `http://localhost:4000/auth/google`
+  5. complete Google auth, then confirm the backend sets the existing
+     `accessToken` HTTP-only cookie and redirects to the frontend
