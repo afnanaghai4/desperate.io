@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import LoginForm from "./login-form";
-import { checkAuth, loginUser } from "@/lib/auth-api";
+import { checkAuth, loginUser, startGoogleLogin } from "@/lib/auth-api";
 import { getProfile } from "@/lib/users-api";
 
 const pushMock = vi.fn();
@@ -17,6 +17,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/auth-api", () => ({
   checkAuth: vi.fn(),
   loginUser: vi.fn(),
+  startGoogleLogin: vi.fn(),
 }));
 
 vi.mock("@/lib/users-api", () => ({
@@ -25,6 +26,7 @@ vi.mock("@/lib/users-api", () => ({
 
 const checkAuthMock = vi.mocked(checkAuth);
 const loginUserMock = vi.mocked(loginUser);
+const startGoogleLoginMock = vi.mocked(startGoogleLogin);
 const getProfileMock = vi.mocked(getProfile);
 
 const completeProfileResponse = {
@@ -54,6 +56,7 @@ const completeProfileResponse = {
 describe("LoginForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.pushState({}, "", "/login");
     checkAuthMock.mockResolvedValue(null);
     loginUserMock.mockResolvedValue({
       message: "Login successful",
@@ -88,6 +91,37 @@ describe("LoginForm", () => {
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith("/dashboard");
     });
+  });
+
+  it("starts Google login from the Google button", async () => {
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    await screen.findByRole("button", { name: "Continue with Google" });
+    await user.click(screen.getByRole("button", { name: "Continue with Google" }));
+
+    expect(startGoogleLoginMock).toHaveBeenCalledTimes(1);
+    expect(loginUserMock).not.toHaveBeenCalled();
+  });
+
+  it("shows a Google failure message from the callback query", async () => {
+    window.history.pushState({}, "", "/login?authError=google_failed");
+
+    render(<LoginForm />);
+
+    expect(await screen.findByText("Google sign-in failed. Please try again.")).toBeInTheDocument();
+  });
+
+  it("shows a Google email conflict message from the callback query", async () => {
+    window.history.pushState({}, "", "/login?authError=google_email_conflict");
+
+    render(<LoginForm />);
+
+    expect(
+      await screen.findByText(
+        "An account already exists for that email. Sign in with your email and password to continue.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("routes to profile setup after login when academic details are missing", async () => {

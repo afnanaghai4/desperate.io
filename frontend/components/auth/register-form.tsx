@@ -8,6 +8,7 @@ import { signupUser, checkAuth } from '@/lib/auth-api';
 import AuthCard from '../ui/auth-card';
 import InputField from '../ui/input-field';
 import AuthButton from '../ui/auth-button';
+import GoogleAuthButton from './google-auth-button';
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -76,6 +77,14 @@ export default function RegisterForm() {
       title="Welcome!"
       subtitle="Sign up to get started."
     >
+      <GoogleAuthButton disabled={isLoading} />
+
+      <div className="my-5 flex items-center gap-3 text-xs font-medium uppercase text-gray-400">
+        <div className="h-px flex-1 bg-gray-200" />
+        <span>or</span>
+        <div className="h-px flex-1 bg-gray-200" />
+      </div>
+
       <form className="space-y-5" onSubmit={handleSubmit}>
         {error && (
           <div className="rounded bg-red-50 p-3 text-sm text-red-600">

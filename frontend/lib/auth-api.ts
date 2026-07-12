@@ -1,4 +1,4 @@
-import { apiFetch } from "./api";
+import { API_BASE_URL, apiFetch } from "./api";
 
 export interface LoginPayload {
     email: string;
@@ -59,6 +59,14 @@ export async function checkAuth(): Promise<UserInfo | null> {
     } catch {
         return null;
     }
+}
+
+export function getGoogleLoginUrl(): string {
+    return `${API_BASE_URL.replace(/\/+$/, '')}/auth/google`;
+}
+
+export function startGoogleLogin(): void {
+    window.location.assign(getGoogleLoginUrl());
 }
 
 export async function logoutUser() {

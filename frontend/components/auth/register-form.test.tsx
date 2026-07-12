@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import RegisterForm from "./register-form";
-import { checkAuth, signupUser } from "@/lib/auth-api";
+import { checkAuth, signupUser, startGoogleLogin } from "@/lib/auth-api";
 
 const pushMock = vi.fn();
 
@@ -16,10 +16,12 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/auth-api", () => ({
   checkAuth: vi.fn(),
   signupUser: vi.fn(),
+  startGoogleLogin: vi.fn(),
 }));
 
 const checkAuthMock = vi.mocked(checkAuth);
 const signupUserMock = vi.mocked(signupUser);
+const startGoogleLoginMock = vi.mocked(startGoogleLogin);
 
 describe("RegisterForm", () => {
   beforeEach(() => {
@@ -74,6 +76,16 @@ describe("RegisterForm", () => {
     await user.click(screen.getByRole("button", { name: "Sign Up" }));
 
     expect(screen.getByText("Username must be at least 3 characters long.")).toBeInTheDocument();
+    expect(signupUserMock).not.toHaveBeenCalled();
+  });
+
+  it("starts Google login from the Google button", async () => {
+    const user = userEvent.setup();
+    await renderReadyForm();
+
+    await user.click(screen.getByRole("button", { name: "Continue with Google" }));
+
+    expect(startGoogleLoginMock).toHaveBeenCalledTimes(1);
     expect(signupUserMock).not.toHaveBeenCalled();
   });
 

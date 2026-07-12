@@ -112,7 +112,8 @@ This note summarizes the current discussion about adding Google sign-in/sign-up 
   - `backend/.env` is loaded by the Nest backend when running locally and is also passed to the backend Docker service through `env_file`.
   - Google OAuth app credentials should go in `backend/.env`, not root `.env`.
 - User has updated `backend/.env` with the Google OAuth values.
-- Next engineering steps after PR 1: backend OAuth endpoints, provider identity persistence, frontend Google buttons, and mocked tests.
+- Backend OAuth endpoints, provider identity persistence, frontend Google
+  buttons, and mocked tests have now been implemented across PRs 1-3.
 - GitHub tracking:
   - Issue #67 now contains the Google sign-in/sign-up v1 scope and security/test expectations.
   - Issue #87 tracks the later explicit Google account-linking flow for existing email/password users.
@@ -157,3 +158,123 @@ This note summarizes the current discussion about adding Google sign-in/sign-up 
   4. visit `http://localhost:4000/auth/google`
   5. complete Google auth, then confirm the backend sets the existing
      `accessToken` HTTP-only cookie and redirects to the frontend
+
+## PR 2 Review Follow-Ups
+
+- PR #89 was opened from `agent/auth-password-credentials-pr2` for backend-only
+  Google sign-in.
+- The user explicitly approved a one-time exception to the 600-line PR size
+  guideline because this backend OAuth implementation includes tightly coupled
+  schema, service, controller, tests, and docs changes.
+- A manual PR review sub-agent found no blocking issues. Its useful suggestions
+  were:
+  - make OAuth attempt consumption atomic
+  - clean up expired OAuth attempts
+  - add tests for invalid Google issuer and missing Google identity claims
+  - document production cookie and migration-verification follow-ups
+- Those sub-agent suggestions were addressed by:
+  - changing OAuth attempt consumption to a conditional update on `stateHash`,
+    `usedAt IS NULL`, and `expiresAt > now`
+  - treating `affected !== 1` as invalid or expired state
+  - deleting expired attempts before creating a new Google login attempt
+  - adding unit tests for invalid issuer and missing `sub`/email claims
+  - adding `docs/prod-issue-pr.md`
+- CodeRabbit made two actionable comments:
+  - OAuth attempt consumption should be atomic
+  - `AuthAccount.userId` needed `@Index('IDX_auth_accounts_userId')` to match
+    the migration's standalone index
+- Both CodeRabbit comments were fixed and CodeRabbit later confirmed them as
+  addressed.
+- Copilot made three actionable comments:
+  - `GoogleOAuthService.getRequiredConfig()` should not throw a raw `Error`
+  - same-email Google conflict should not redirect with generic
+    `authError=google_failed`
+  - logout should clear the auth cookie using matching cookie attributes
+- Copilot fixes applied:
+  - `getRequiredConfig()` now throws Nest `InternalServerErrorException`
+  - Google `sub` is defensively coerced with `payload.sub ?? ''`
+  - `googleCallback()` maps `ConflictException` to
+    `authError=google_email_conflict`
+  - logout clears `accessToken` with the same `httpOnly`, `secure`, `sameSite`,
+    and `path` options used when setting it
+  - controller and e2e tests were updated for conflict redirect and logout
+    cookie clearing behavior
+- Codecov reported patch coverage around 72% after follow-up commits. The main
+  uncovered areas are `google-oauth.service.ts`, migration code, and Nest module
+  metadata. This does not mean tests failed; it means changed lines in those
+  files are not all executed by the test suite.
+- Latest validation after Copilot fixes:
+  - `npm run test -- auth.service.spec.ts auth.controller.spec.ts --runInBand`
+  - `npm run test:e2e -- --runInBand`
+  - `npm run lint` passed with the known pre-existing warning in
+    `project-recommendation.entity.ts`
+  - `npm run build`
+- Production follow-ups intentionally remain:
+  - decide whether production split-domain auth should use configurable
+    `SameSite=None; Secure`
+  - add a migration verification workflow that runs migrations with
+    `DB_SYNC=false` against a disposable test database
+
+## PR 3 Frontend Implementation
+
+- PR #90 was opened from `agent/auth-password-credentials-pr3` for the
+  frontend Google sign-in/sign-up entry points.
+- The PR is frontend-only. It does not change backend endpoints, DTOs,
+  database schema, migrations, cookies, or API response shapes.
+- Implemented frontend behavior:
+  - added a reusable `GoogleAuthButton`
+  - added `Continue with Google` to both login and signup forms
+  - clicking the Google button performs a top-level browser redirect to the
+    backend OAuth start endpoint at `/auth/google`
+  - login reads backend callback errors from `authError`
+  - `google_failed` shows a generic Google sign-in failure message
+  - `google_email_conflict` tells the user to sign in with email/password
+    because the email already exists
+- Frontend auth helpers now expose:
+  - `API_BASE_URL` from `frontend/lib/api.ts`
+  - `getGoogleLoginUrl()` from `frontend/lib/auth-api.ts`
+  - `startGoogleLogin()` from `frontend/lib/auth-api.ts`
+- `getGoogleLoginUrl()` normalizes the configured backend base URL by removing
+  trailing slashes before appending `/auth/google`. This avoids URLs like
+  `https://api.example.com//auth/google`.
+- Tests added/updated:
+  - login form starts Google login without submitting email/password login
+  - login form displays `google_failed`
+  - login form displays `google_email_conflict`
+  - signup form starts Google login without submitting signup
+  - auth API URL helper covers configured base URL, trailing slash
+    normalization, and localhost fallback
+- PR #90 manual PR review sub-agent found no blocking issues. Its only
+  optional suggestions were:
+  - add configured `NEXT_PUBLIC_API_BASE_URL` coverage
+  - remove duplicated PR-body summary text
+- The PR body duplicate summary was cleaned up.
+- Copilot review found two valid issues:
+  - direct URL concatenation could produce a double slash when
+    `NEXT_PUBLIC_API_BASE_URL` ended with `/`
+  - the original URL helper test depended on ambient environment state because
+    `API_BASE_URL` is captured at module import time
+- Copilot fixes applied:
+  - normalized trailing slashes in `getGoogleLoginUrl()`
+  - rewrote `auth-api.test.ts` to set `NEXT_PUBLIC_API_BASE_URL`, call
+    `vi.resetModules()`, dynamically import `auth-api`, and restore/reset
+    state after each test
+  - added explicit trailing-slash and fallback tests
+- Latest validation after Copilot fixes:
+  - `npm run test -- auth-api.test.ts login-form.test.tsx register-form.test.tsx`
+    passed with 13 tests
+  - `npm run test` passed with 16 files / 74 tests
+  - `npm run lint` passed with the known pre-existing warning in
+    `frontend/components/layout/navbar.tsx`
+  - `npm run type-check` passed
+  - `npm run build` passed
+- GitHub review state after the follow-up commit:
+  - Copilot review threads became outdated after the fixes
+  - PR #90 has two commits, latest head `a476eef`
+- Remaining intentional follow-ups after PR #90:
+  - frontend Vitest is still not run in GitHub Actions CI, so PR #90 relies on
+    local `npm run test` for frontend test execution
+  - explicit Google account linking for existing email/password users remains
+    out of scope and tracked by issue #87
+  - production split-domain cookie behavior and migration verification remain
+    the backend hardening follow-ups from PR #89
