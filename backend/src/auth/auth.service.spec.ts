@@ -74,6 +74,8 @@ describe('AuthService', () => {
           }) as OAuthLoginAttempt,
       ),
       findOne: jest.fn(),
+      delete: jest.fn(),
+      update: jest.fn().mockResolvedValue({ affected: 1 }),
     };
 
     dataSource = {
@@ -285,6 +287,7 @@ describe('AuthService', () => {
         usedAt: null,
       }),
     );
+    expect(oauthLoginAttemptsRepository.delete).toHaveBeenCalled();
     expect(oauthLoginAttemptsRepository.save).toHaveBeenCalled();
     expect(googleOAuthService.getAuthorizationUrl).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -335,10 +338,13 @@ describe('AuthService', () => {
       state: 'state',
     });
 
-    expect(oauthLoginAttemptsRepository.save).toHaveBeenCalledWith(
+    expect(oauthLoginAttemptsRepository.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        usedAt: expect.any(Date) as unknown as Date,
+        stateHash: expect.any(String) as unknown as string,
+        usedAt: expect.any(Object) as unknown as object,
+        expiresAt: expect.any(Object) as unknown as object,
       }),
+      { usedAt: expect.any(Date) as unknown as Date },
     );
     expect(googleOAuthService.exchangeCodeForIdToken).toHaveBeenCalledWith({
       code: 'code',
@@ -502,6 +508,7 @@ describe('AuthService', () => {
   });
 
   it('rejects Google login with an expired or replayed state', async () => {
+    oauthLoginAttemptsRepository.update?.mockResolvedValue({ affected: 0 });
     oauthLoginAttemptsRepository.findOne?.mockResolvedValue({
       attemptId: 1,
       stateHash: 'hash',
@@ -515,6 +522,55 @@ describe('AuthService', () => {
     await expect(
       authService.handleGoogleCallback({ code: 'code', state: 'state' }),
     ).rejects.toThrow(BadRequestException);
+    expect(oauthLoginAttemptsRepository.findOne).not.toHaveBeenCalled();
     expect(googleOAuthService.exchangeCodeForIdToken).not.toHaveBeenCalled();
+  });
+
+  it('rejects Google login with an invalid issuer', async () => {
+    oauthLoginAttemptsRepository.findOne?.mockResolvedValue({
+      attemptId: 1,
+      stateHash: 'hash',
+      nonce: 'nonce',
+      codeVerifier: 'verifier',
+      expiresAt: new Date(Date.now() + 60_000),
+      usedAt: new Date(),
+      createdAt: new Date(),
+    });
+    googleOAuthService.exchangeCodeForIdToken.mockResolvedValue('id-token');
+    googleOAuthService.verifyIdToken.mockResolvedValue({
+      sub: 'google-sub',
+      email: 'verified@example.com',
+      emailVerified: true,
+      nonce: 'nonce',
+      issuer: 'https://not-google.example.com',
+    });
+
+    await expect(
+      authService.handleGoogleCallback({ code: 'code', state: 'state' }),
+    ).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('rejects Google login with missing identity claims', async () => {
+    oauthLoginAttemptsRepository.findOne?.mockResolvedValue({
+      attemptId: 1,
+      stateHash: 'hash',
+      nonce: 'nonce',
+      codeVerifier: 'verifier',
+      expiresAt: new Date(Date.now() + 60_000),
+      usedAt: new Date(),
+      createdAt: new Date(),
+    });
+    googleOAuthService.exchangeCodeForIdToken.mockResolvedValue('id-token');
+    googleOAuthService.verifyIdToken.mockResolvedValue({
+      sub: '',
+      email: '',
+      emailVerified: true,
+      nonce: 'nonce',
+      issuer: 'https://accounts.google.com',
+    });
+
+    await expect(
+      authService.handleGoogleCallback({ code: 'code', state: 'state' }),
+    ).rejects.toThrow(UnauthorizedException);
   });
 });

@@ -21,6 +21,7 @@ export class AuthAccount {
   accountId: number;
 
   @Column({ type: 'integer' })
+  @Index('IDX_auth_accounts_userId')
   userId: number;
 
   @Column({ type: 'varchar' })

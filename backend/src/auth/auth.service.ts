@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { createHash, randomBytes } from 'crypto';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, IsNull, LessThan, MoreThan, Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -154,6 +154,10 @@ export class AuthService {
   }
 
   async startGoogleLogin(): Promise<{ authorizationUrl: string }> {
+    await this.oauthLoginAttemptsRepository.delete({
+      expiresAt: LessThan(new Date()),
+    });
+
     const state = this.generateRandomValue();
     const nonce = this.generateRandomValue();
     const codeVerifier = this.generateRandomValue(64);
@@ -258,20 +262,29 @@ export class AuthService {
   }
 
   private async consumeOAuthAttempt(state: string): Promise<OAuthLoginAttempt> {
-    const attempt = await this.oauthLoginAttemptsRepository.findOne({
-      where: { stateHash: this.hashValue(state) },
-    });
+    const stateHash = this.hashValue(state);
+    const now = new Date();
+    const updateResult = await this.oauthLoginAttemptsRepository.update(
+      {
+        stateHash,
+        usedAt: IsNull(),
+        expiresAt: MoreThan(now),
+      },
+      { usedAt: now },
+    );
 
-    if (
-      !attempt ||
-      attempt.usedAt ||
-      attempt.expiresAt.getTime() < Date.now()
-    ) {
+    if (updateResult.affected !== 1) {
       throw new BadRequestException('Invalid or expired Google sign-in state');
     }
 
-    attempt.usedAt = new Date();
-    return this.oauthLoginAttemptsRepository.save(attempt);
+    const attempt = await this.oauthLoginAttemptsRepository.findOne({
+      where: { stateHash },
+    });
+    if (!attempt) {
+      throw new BadRequestException('Invalid or expired Google sign-in state');
+    }
+
+    return attempt;
   }
 
   private assertValidGoogleIdentity(
