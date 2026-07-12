@@ -10,6 +10,19 @@ import { isProfileComplete } from '@/lib/profile-completeness';
 import AuthCard from '../ui/auth-card';
 import InputField from '../ui/input-field';
 import AuthButton from '../ui/auth-button';
+import GoogleAuthButton from './google-auth-button';
+
+function getGoogleAuthErrorMessage(authError: string | null): string {
+  if (authError === 'google_email_conflict') {
+    return 'An account already exists for that email. Sign in with your email and password to continue.';
+  }
+
+  if (authError) {
+    return 'Google sign-in failed. Please try again.';
+  }
+
+  return '';
+}
 
 export default function LoginForm() {
   const router = useRouter();
@@ -34,6 +47,14 @@ export default function LoginForm() {
 
     verifyAuth();
   }, [router]);
+
+  useEffect(() => {
+    const authError = new URLSearchParams(window.location.search).get('authError');
+    const authErrorMessage = getGoogleAuthErrorMessage(authError);
+    if (authErrorMessage) {
+      setError(authErrorMessage);
+    }
+  }, []);
 
   if (isCheckingAuth) {
     return (
@@ -90,6 +111,14 @@ export default function LoginForm() {
       title="Welcome Back!"
       subtitle="Sign in to continue to your dashboard."
     >
+      <GoogleAuthButton disabled={isLoading} />
+
+      <div className="my-5 flex items-center gap-3 text-xs font-medium uppercase text-gray-400">
+        <div className="h-px flex-1 bg-gray-200" />
+        <span>or</span>
+        <div className="h-px flex-1 bg-gray-200" />
+      </div>
+
       <form className="space-y-5" onSubmit={handleSubmit}>
         {error && (
           <div className="rounded bg-red-50 p-3 text-sm text-red-600">
