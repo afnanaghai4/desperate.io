@@ -3,6 +3,7 @@
 .env.*
 !.env.production.example
 frontend/.env.local
+!frontend/.env.production.example
 backend/.env
 backend/.env.*
 !backend/.env.production.example

@@ -8,6 +8,7 @@ describe('AuthController', () => {
   let originalNodeEnv: string | undefined;
   let originalCookieSameSite: string | undefined;
   let authService: {
+    login: jest.Mock;
     startGoogleLogin: jest.Mock;
     handleGoogleCallback: jest.Mock;
   };
@@ -18,6 +19,7 @@ describe('AuthController', () => {
     originalCookieSameSite = process.env.COOKIE_SAME_SITE;
     process.env.FRONTEND_URL = 'http://localhost:3000';
     authService = {
+      login: jest.fn(),
       startGoogleLogin: jest.fn(),
       handleGoogleCallback: jest.fn(),
     };
@@ -161,6 +163,45 @@ describe('AuthController', () => {
         path: '/',
       }),
     );
+  });
+
+  it('sets secure SameSite=None auth cookies during production login', async () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.COOKIE_SAME_SITE;
+    authService.login.mockResolvedValue({
+      data: {
+        accessToken: 'login-jwt',
+        user: {
+          id: 1,
+          email: 'user@example.com',
+        },
+      },
+    });
+
+    await controller.login(
+      { email: 'user@example.com', password: 'Password123!' },
+      response as unknown as Response,
+    );
+
+    expect(response.cookie).toHaveBeenCalledWith(
+      'accessToken',
+      'login-jwt',
+      expect.objectContaining({
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+        path: '/',
+      }),
+    );
+    expect(response.json).toHaveBeenCalledWith({
+      message: 'Login successful',
+      data: {
+        user: {
+          id: 1,
+          email: 'user@example.com',
+        },
+      },
+    });
   });
 
   it('allows overriding production auth cookie SameSite through env', () => {

@@ -641,6 +641,8 @@ Safe, focused priorities for future development:
 - **Preserve the current modular monolith architecture.** Keep backend as single NestJS app.
 - **Preserve the existing test file placement conventions.** Unit tests colocated, e2e in `/test`.
 - **Do not commit secrets or real environment values.** Use `.example` files only.
+- **Do not commit cloud provider account, identity, or resource details.** This includes AWS account IDs, IAM user names/ARNs, EC2 instance IDs, public IPs, public DNS names, SSH key paths, access key IDs, budget/account details, or any other operational cloud metadata. Keep these details outside the repository, even in private branches or internal docs.
+- **Treat sensitive information with extreme caution.** Before every commit or PR, inspect changed files for secrets, credentials, tokens, private keys, real service URLs, real infrastructure identifiers, local machine paths, and environment values. Use placeholders only.
 - **If production code must change during a test task, explain why clearly.** Justify any changes to non-test files.
 
 ## 14. Open Questions / Needs Verification
