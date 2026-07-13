@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import { DifficultyLevel } from '../common/enums/difficulty-level.enum';
@@ -81,7 +81,7 @@ export class AiOrchestratorService {
 
   private validateInputs(request: AnalyzeJobFitRequest): void {
     if (!request) {
-      throw new Error('Request body is required.');
+      throw new BadRequestException('Request body is required.');
     }
 
     // Enforce userId is a finite, positive integer (blocks NaN, Infinity, decimals)
@@ -91,7 +91,9 @@ export class AiOrchestratorService {
       !Number.isInteger(request.userId) ||
       request.userId <= 0
     ) {
-      throw new Error('Invalid or missing userId (must be a positive integer)');
+      throw new BadRequestException(
+        'Invalid or missing userId (must be a positive integer)',
+      );
     }
     validateJobDescriptionForAnalysis(request.jobDescription);
     // Removed: Overly aggressive character filter that blocked common job posting characters
@@ -102,7 +104,7 @@ export class AiOrchestratorService {
   private validateUserProfile(experiences: UserExperienceDto[]): void {
     // Ensure user has at least one experience entry
     if (!Array.isArray(experiences) || experiences.length === 0) {
-      throw new Error(
+      throw new BadRequestException(
         'User profile must have at least one experience entry to analyze job fit.',
       );
     }
@@ -112,14 +114,14 @@ export class AiOrchestratorService {
 
       // Validate element is an object (catches null, primitives like 42 or null)
       if (typeof exp !== 'object' || exp === null) {
-        throw new Error(
+        throw new BadRequestException(
           `Experience at index ${i + 1}: invalid entry (must be an object)`,
         );
       }
 
       // Validate skills is a non-empty string
       if (typeof exp.skills !== 'string' || exp.skills.trim().length === 0) {
-        throw new Error(
+        throw new BadRequestException(
           `Experience at index ${i + 1}: skills must be a non-empty string`,
         );
       }
@@ -222,10 +224,9 @@ export class AiOrchestratorService {
 
     const analysis = data as Record<string, unknown>;
 
-    // Validate strengths (at least 1, all non-empty strings)
+    // Validate strengths (can be empty for low-match jobs, all entries non-empty)
     if (
       !Array.isArray(analysis.strengths) ||
-      analysis.strengths.length === 0 ||
       !analysis.strengths.every(
         (item) => typeof item === 'string' && item.trim().length > 0,
       )
@@ -233,10 +234,9 @@ export class AiOrchestratorService {
       return false;
     }
 
-    // Validate weaknesses (at least 1, all non-empty strings)
+    // Validate weaknesses (can be empty for near-perfect matches, all entries non-empty)
     if (
       !Array.isArray(analysis.weaknesses) ||
-      analysis.weaknesses.length === 0 ||
       !analysis.weaknesses.every(
         (item) => typeof item === 'string' && item.trim().length > 0,
       )
@@ -566,7 +566,7 @@ CRITICAL: Return ONLY valid JSON in this exact format:
       // Step 2: Fetch user profile from database
       const user = await this.usersService.findById(request.userId);
       if (!user) {
-        throw new Error('User profile not found');
+        throw new NotFoundException('User profile not found');
       }
 
       // Step 3: Extract experiences from user profile (with null checks)
