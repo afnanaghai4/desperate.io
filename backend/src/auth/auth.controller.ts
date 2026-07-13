@@ -11,7 +11,7 @@ import {
   HttpCode,
   ConflictException,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { CookieOptions, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -135,14 +135,30 @@ export class AuthController {
     });
   }
 
-  private getAccessTokenCookieOptions() {
+  private getAccessTokenCookieOptions(): CookieOptions {
     const isProduction = process.env.NODE_ENV === 'production';
+    const sameSite = this.getCookieSameSite(isProduction);
+
     return {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'strict' : 'lax',
+      secure: isProduction || sameSite === 'none',
+      sameSite,
       path: '/',
-    } as const;
+    };
+  }
+
+  private getCookieSameSite(isProduction: boolean): CookieOptions['sameSite'] {
+    const configuredSameSite = process.env.COOKIE_SAME_SITE?.toLowerCase();
+
+    if (
+      configuredSameSite === 'lax' ||
+      configuredSameSite === 'strict' ||
+      configuredSameSite === 'none'
+    ) {
+      return configuredSameSite;
+    }
+
+    return isProduction ? 'none' : 'lax';
   }
 
   private buildFrontendRedirect(path: string, authError?: string): string {

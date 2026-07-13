@@ -55,6 +55,8 @@ Before making any changes, agents must read:
 - **Preserve the current modular monolith architecture.** Maintain separation by module, not by microservice.
 - **Preserve existing test file placement conventions.** Follow the current structure strictly.
 - **Do not commit secrets or real environment values.** Use `.env.example` and `.gitignore`.
+- **Do not commit cloud provider account, identity, or resource details.** This includes AWS account IDs, IAM user names/ARNs, EC2 instance IDs, public IPs, public DNS names, SSH key paths, access key IDs, regions tied to a real account, budget details, or any other operational cloud metadata. Keep these details outside the repository, even in private branches or internal docs.
+- **Treat sensitive information with extreme caution.** Before every commit or PR, check changed files for secrets, credentials, tokens, private keys, real service URLs, real infrastructure identifiers, local machine paths, and environment values. Use placeholders only.
 - **If production code must change during a test task, explain why clearly.** Document in PR.
 
 ## Frontend Route Protection
@@ -157,6 +159,7 @@ Review agents must check for:
 - **Unnecessary refactors** — changes beyond the task scope
 - **Real OpenAI calls in tests** — must be mocked
 - **Committed secrets** — no API keys, tokens, or credentials
+- **Committed cloud or operational metadata** — no AWS/account/resource identifiers, public IPs, DNS names, SSH key paths, or real deployment values
 - **CI failures** — lint, test, or build failures
 - **Database schema risks** — migrations without backward compatibility
 
