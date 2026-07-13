@@ -5,6 +5,8 @@ import { AuthService } from './auth.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
+  let originalNodeEnv: string | undefined;
+  let originalCookieSameSite: string | undefined;
   let authService: {
     startGoogleLogin: jest.Mock;
     handleGoogleCallback: jest.Mock;
@@ -12,6 +14,8 @@ describe('AuthController', () => {
   let response: Partial<Record<keyof Response, jest.Mock>>;
 
   beforeEach(() => {
+    originalNodeEnv = process.env.NODE_ENV;
+    originalCookieSameSite = process.env.COOKIE_SAME_SITE;
     process.env.FRONTEND_URL = 'http://localhost:3000';
     authService = {
       startGoogleLogin: jest.fn(),
@@ -27,6 +31,12 @@ describe('AuthController', () => {
   });
 
   afterEach(() => {
+    process.env.NODE_ENV = originalNodeEnv;
+    if (originalCookieSameSite === undefined) {
+      delete process.env.COOKIE_SAME_SITE;
+    } else {
+      process.env.COOKIE_SAME_SITE = originalCookieSameSite;
+    }
     delete process.env.FRONTEND_URL;
     jest.clearAllMocks();
   });
@@ -134,5 +144,37 @@ describe('AuthController', () => {
     expect(response.json).toHaveBeenCalledWith({
       message: 'Logout successful',
     });
+  });
+
+  it('uses secure SameSite=None auth cookies in production by default', () => {
+    process.env.NODE_ENV = 'production';
+    delete process.env.COOKIE_SAME_SITE;
+
+    controller.logout(response as unknown as Response);
+
+    expect(response.clearCookie).toHaveBeenCalledWith(
+      'accessToken',
+      expect.objectContaining({
+        httpOnly: true,
+        sameSite: 'none',
+        secure: true,
+        path: '/',
+      }),
+    );
+  });
+
+  it('allows overriding production auth cookie SameSite through env', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.COOKIE_SAME_SITE = 'lax';
+
+    controller.logout(response as unknown as Response);
+
+    expect(response.clearCookie).toHaveBeenCalledWith(
+      'accessToken',
+      expect.objectContaining({
+        sameSite: 'lax',
+        secure: true,
+      }),
+    );
   });
 });
