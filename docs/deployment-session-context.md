@@ -66,11 +66,7 @@ This machine can run SSH commands. Actual server SSH access still depends on:
 - Correct SSH key path.
 - Security group allowing port `22` from the current public IP.
 
-Docker is installed but not fully usable yet:
-
-```text
-Docker version 26.0.0, build 2ae903e
-```
+Docker is installed locally, but local Docker config permissions previously needed attention.
 
 The following commands failed:
 
@@ -127,62 +123,31 @@ Current status:
 
 ## Server Status
 
-Server instance has been launched. Real account, host, and resource identifiers are intentionally omitted from repository files.
+Server instance has been launched and bootstrap is complete. Real account, host, resource identifiers, usernames, paths, versions, and commit details are intentionally omitted from repository files.
 
-```text
-Type: t3.micro
-OS: Ubuntu 24.04 LTS
-```
+Completed at a high level:
 
-SSH was verified successfully as user `ubuntu`.
+- SSH access verified.
+- Base system packages installed.
+- Docker and Docker Compose installed and verified.
+- Swap configured.
+- Public repository cloned.
 
-Server bootstrap completed:
+The backend containers have not been started for final production yet.
 
-- System packages updated.
-- Git, curl, ca-certificates, and basic tooling installed.
-- Docker Engine installed.
-- Docker Compose plugin installed.
-- Docker service enabled and started.
-- `ubuntu` user added to the `docker` group.
-- 2 GB swap file created and enabled at `/swapfile`.
-- Public repo cloned to `/home/ubuntu/desperate.io`.
-
-Verified server versions:
-
-```text
-Docker version 29.6.1
-Docker Compose version v5.3.1
-Swap: 2.0Gi
-Repo branch: master
-Repo commit: a3bea7a
-```
-
-The backend containers have not been started for final production yet because deployment compatibility changes still need to land.
-
-## Deployment Compatibility Work Still Needed
+## Deployment Work Still Needed
 
 Before final Vercel/browser auth testing:
 
-- Update production auth cookie behavior for split frontend/backend domains:
-  - Use `SameSite=None` in production, preferably configurable through `COOKIE_SAME_SITE`.
-  - Keep `HttpOnly`, `Secure`, and `path=/`.
-  - Clear logout cookie using matching production cookie options.
-- Ensure backend CORS allows the Vercel frontend domain and credentials.
-- Create safe production env example/documentation.
-- Use `docker-compose.prod.yaml` for production:
-  - Backend is published on `127.0.0.1:${BACKEND_PORT}:4000` for a local reverse proxy.
-  - Postgres is not published to the public network.
-- Copy `.env.production.example` to `.env` on the server.
-- Copy `backend/.env.production.example` to `backend/.env` on the server.
-- Use production env values only on the server:
-  - `NODE_ENV=production`
-  - `DB_SYNC=false`
-  - strong `JWT_SECRET`
-  - real `OPENAI_API_KEY`
-  - `CORS_ORIGIN=https://<vercel-domain>`
-  - `COOKIE_SAME_SITE=none`
+- Create production `.env` files on the server only using the committed example files as templates.
+- Configure `CORS_ORIGIN` and `FRONTEND_URL` with the final frontend origin.
+- Configure HTTPS reverse proxy in front of the backend.
+- Start production containers with the production Compose file.
+- Verify backend `/health` over HTTPS.
+- Configure Vercel `NEXT_PUBLIC_API_BASE_URL` with the backend HTTPS URL.
+- Run final deployed auth, job, analysis, and logout smoke tests.
 
-Production container start command:
+Production container start command after server-only env files are populated:
 
 ```bash
 docker compose -f docker-compose.prod.yaml up -d --build
@@ -190,48 +155,20 @@ docker compose -f docker-compose.prod.yaml up -d --build
 
 ## Recommended Next Steps
 
-1. Finish cloud CLI setup on this machine and verify it without committing account details.
+1. Populate production env files on the server only.
 
-2. Fix Docker config permissions and verify Docker Compose:
-
-   ```powershell
-   docker compose version
-   docker info
-   ```
-
-3. Create server instance:
-
-   - Region: selected deployment region
-   - Type: `t3.micro`
-   - OS: Ubuntu LTS
-   - Storage: 20-30 GB gp3
-   - Security group:
-     - SSH `22` from user's IP only
-     - HTTP `80` public
-     - HTTPS `443` public
-     - No public PostgreSQL `5432`
-
-4. Download and store the SSH key securely outside the repo.
-
-5. Bootstrap server:
-
-   - Install Docker and Docker Compose plugin.
-   - Add 2 GB swap.
-   - Clone repo.
-   - Create production `.env` files on server only.
-   - Start backend and PostgreSQL with Docker Compose.
-   - Verify `/health`.
-
-6. Add HTTPS reverse proxy:
+2. Add HTTPS reverse proxy:
 
    - Prefer Caddy for simpler automatic HTTPS.
    - Use a temporary wildcard DNS hostname for first deployment.
 
-7. Configure Vercel after backend HTTPS URL exists:
+3. Configure Vercel after backend HTTPS URL exists:
 
    - Project root: `frontend`
    - `NEXT_PUBLIC_API_BASE_URL=https://<backend-hostname>`
    - Deploy production frontend.
+
+4. Run deployed smoke tests for signup, login, protected routes, job creation, analysis, and logout.
 
 ## Security Notes
 

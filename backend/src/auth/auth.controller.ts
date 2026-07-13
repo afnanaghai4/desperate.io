@@ -137,10 +137,12 @@ export class AuthController {
 
   private getAccessTokenCookieOptions(): CookieOptions {
     const isProduction = process.env.NODE_ENV === 'production';
+    const sameSite = this.getCookieSameSite(isProduction);
+
     return {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: this.getCookieSameSite(isProduction),
+      secure: isProduction || sameSite === 'none',
+      sameSite,
       path: '/',
     };
   }

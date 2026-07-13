@@ -33,7 +33,11 @@ describe('AuthController', () => {
   });
 
   afterEach(() => {
-    process.env.NODE_ENV = originalNodeEnv;
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV;
+    } else {
+      process.env.NODE_ENV = originalNodeEnv;
+    }
     if (originalCookieSameSite === undefined) {
       delete process.env.COOKIE_SAME_SITE;
     } else {
@@ -214,6 +218,21 @@ describe('AuthController', () => {
       'accessToken',
       expect.objectContaining({
         sameSite: 'lax',
+        secure: true,
+      }),
+    );
+  });
+
+  it('forces secure cookies when SameSite=None is configured outside production', () => {
+    process.env.NODE_ENV = 'test';
+    process.env.COOKIE_SAME_SITE = 'none';
+
+    controller.logout(response as unknown as Response);
+
+    expect(response.clearCookie).toHaveBeenCalledWith(
+      'accessToken',
+      expect.objectContaining({
+        sameSite: 'none',
         secure: true,
       }),
     );
