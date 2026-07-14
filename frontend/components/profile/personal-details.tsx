@@ -15,6 +15,14 @@ interface PersonalDetailsProps {
     isPrimaryActionSubmit?: boolean;
 }
 
+function RequiredMark() {
+  return (
+    <span className="ml-1 text-red-600" aria-hidden="true">
+      *
+    </span>
+  );
+}
+
 export default function PersonalDetails({ 
     data, 
     setData, 
@@ -51,6 +59,7 @@ export default function PersonalDetails({
         <div>
           <label className="mb-2 block text-sm font-medium text-gray-700">
             Full Name
+            <RequiredMark />
           </label>
             <input
                 type="text"

@@ -52,6 +52,7 @@ describe("ProfileSetupContainer", () => {
     render(<ProfileSetupContainer />);
 
     await screen.findByPlaceholderText("Enter your full name");
+    expect(screen.getByText("*")).toBeInTheDocument();
     await user.type(screen.getByPlaceholderText("Enter your full name"), "Afnan Aghai");
     await user.click(screen.getByRole("button", { name: "Professional Details" }));
     await user.click(screen.getByRole("button", { name: "Complete" }));
@@ -59,6 +60,63 @@ describe("ProfileSetupContainer", () => {
     expect(await screen.findByText("At least one education is required to continue.")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Academic Details" })).toBeInTheDocument();
     expect(createProfileMock).not.toHaveBeenCalled();
+  });
+
+  it("marks required academic fields and keeps professional details optional", async () => {
+    const user = userEvent.setup();
+    render(<ProfileSetupContainer />);
+
+    await screen.findByPlaceholderText("Enter your full name");
+    await user.click(screen.getAllByRole("button", { name: "Continue" })[0]);
+
+    expect(screen.getByText("Institute Name").parentElement).toHaveTextContent("*");
+    expect(screen.getByText("Degree Name").parentElement).toHaveTextContent("*");
+    expect(screen.getByText("Field of Study").parentElement).toHaveTextContent("*");
+    expect(screen.getByText("Start Date").parentElement).toHaveTextContent("*");
+    expect(screen.getByText("End Date").parentElement).toHaveTextContent("*");
+
+    await user.click(screen.getByRole("checkbox", { name: "Currently Attending" }));
+
+    expect(screen.getByText("End Date").parentElement).not.toHaveTextContent("*");
+  });
+
+  it("saves optional professional experience summaries without requiring them", async () => {
+    const user = userEvent.setup();
+    render(<ProfileSetupContainer />);
+
+    await screen.findByPlaceholderText("Enter your full name");
+    await user.type(screen.getByPlaceholderText("Enter your full name"), "Afnan Aghai");
+    await user.click(screen.getAllByRole("button", { name: "Continue" })[0]);
+
+    await user.type(screen.getByLabelText(/Institute Name/), "TU Berlin");
+    await user.type(screen.getByLabelText(/Degree Name/), "MSc");
+    await user.type(screen.getByLabelText(/Field of Study/), "Computer Science");
+    await user.type(screen.getByLabelText(/Start Date/), "2021-10-01");
+    await user.type(screen.getByLabelText(/End Date/), "2023-09-30");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: "Add Experience" }));
+
+    await user.type(screen.getByLabelText("Current Position"), "Intern");
+    await user.type(screen.getByLabelText("Company"), "Acme");
+    await user.type(
+      screen.getByLabelText("Experience Summary"),
+      "Built internal dashboards with React.",
+    );
+    await user.click(screen.getByRole("button", { name: "Complete" }));
+
+    await waitFor(() => {
+      expect(createProfileMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          experiences: [
+            expect.objectContaining({
+              currentPosition: "Intern",
+              company: "Acme",
+              experience: "Built internal dashboards with React.",
+            }),
+          ],
+        }),
+      );
+    });
   });
 
   it("creates a profile with educations in the payload", async () => {
@@ -69,11 +127,11 @@ describe("ProfileSetupContainer", () => {
     await user.type(screen.getByPlaceholderText("Enter your full name"), "Afnan Aghai");
     await user.click(screen.getAllByRole("button", { name: "Continue" })[0]);
 
-    await user.type(screen.getByLabelText("Institute Name"), "TU Berlin");
-    await user.type(screen.getByLabelText("Degree Name"), "MSc");
-    await user.type(screen.getByLabelText("Field of Study"), "Computer Science");
-    await user.type(screen.getByLabelText("Start Date"), "2021-10-01");
-    await user.type(screen.getByLabelText("End Date"), "2023-09-30");
+    await user.type(screen.getByLabelText(/Institute Name/), "TU Berlin");
+    await user.type(screen.getByLabelText(/Degree Name/), "MSc");
+    await user.type(screen.getByLabelText(/Field of Study/), "Computer Science");
+    await user.type(screen.getByLabelText(/Start Date/), "2021-10-01");
+    await user.type(screen.getByLabelText(/End Date/), "2023-09-30");
     await user.type(screen.getByPlaceholderText("Enter your grade or CGPA"), "1.7");
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: "Complete" }));
