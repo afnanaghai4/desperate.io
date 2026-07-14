@@ -152,6 +152,25 @@ describe('AuthController', () => {
     });
   });
 
+  it('returns the authenticated username from auth context', () => {
+    const request = {
+      user: {
+        userId: 1,
+        email: 'user@example.com',
+        username: 'afnan',
+      },
+    } as Parameters<AuthController['getProfile']>[0];
+
+    expect(controller.getProfile(request)).toEqual({
+      message: 'Protected route accessed successfully',
+      data: {
+        userId: 1,
+        email: 'user@example.com',
+        username: 'afnan',
+      },
+    });
+  });
+
   it('uses secure SameSite=None auth cookies in production by default', () => {
     process.env.NODE_ENV = 'production';
     delete process.env.COOKIE_SAME_SITE;
