@@ -21,6 +21,17 @@ export interface UserExperienceDto {
   currentlyWorking?: boolean;
 }
 
+export interface UserEducationDto {
+  instituteName?: string;
+  degreeName?: string;
+  fieldOfStudy?: string;
+  startDate?: string;
+  endDate?: string;
+  currentlyAttending?: boolean;
+  gradeCgpa?: string;
+  description?: string;
+}
+
 export interface AnalyzeJobFitRequest {
   userId: number;
   jobDescription: string;
@@ -105,11 +116,24 @@ export class AiOrchestratorService {
     // and <> (HTML/XML snippets). Job text validation handled by length checks.
   }
 
-  private validateUserProfile(experiences: UserExperienceDto[]): void {
-    // Ensure user has at least one experience entry
-    if (!Array.isArray(experiences) || experiences.length === 0) {
+  private hasUsableEducation(education: UserEducationDto): boolean {
+    return Boolean(
+      education.degreeName?.trim() ||
+      education.fieldOfStudy?.trim() ||
+      education.description?.trim(),
+    );
+  }
+
+  private validateUserProfile(
+    experiences: UserExperienceDto[],
+    educations: UserEducationDto[],
+  ): void {
+    const hasExperiences = Array.isArray(experiences) && experiences.length > 0;
+    const hasEducations = Array.isArray(educations) && educations.length > 0;
+
+    if (!hasExperiences && !hasEducations) {
       throw new BadRequestException(
-        'User profile must have at least one experience entry to analyze job fit.',
+        'User profile must have at least one experience or education entry to analyze job fit.',
       );
     }
 
@@ -129,6 +153,25 @@ export class AiOrchestratorService {
           `Experience at index ${i + 1}: skills must be a non-empty string`,
         );
       }
+    }
+
+    for (let i = 0; i < educations.length; i++) {
+      const education = educations[i];
+
+      if (typeof education !== 'object' || education === null) {
+        throw new BadRequestException(
+          `Education at index ${i + 1}: invalid entry (must be an object)`,
+        );
+      }
+    }
+
+    if (
+      !hasExperiences &&
+      !educations.some((education) => this.hasUsableEducation(education))
+    ) {
+      throw new BadRequestException(
+        'User profile education must include a degree, field of study, or description to analyze job fit.',
+      );
     }
   }
 
@@ -384,6 +427,7 @@ No preamble, no comments, just JSON.`;
 
   private buildUserPrompt(
     experiences: UserExperienceDto[],
+    educations: UserEducationDto[],
     jobDescription: string,
   ): string {
     let prompt = 'Candidate Profile:\n\n';
@@ -404,6 +448,24 @@ No preamble, no comments, just JSON.`;
             : 'not specified'
       }\n\n`;
       prompt += '\n';
+    }
+
+    for (const education of educations) {
+      prompt += 'Education Entry:\n';
+      prompt += `Institute: ${education.instituteName || 'not specified'}\n`;
+      prompt += `Degree: ${education.degreeName || 'not specified'}\n`;
+      prompt += `Field of Study: ${education.fieldOfStudy || 'not specified'}\n`;
+      prompt += `Start Date: ${education.startDate || 'not specified'}\n`;
+      prompt += `End Date: ${education.endDate || 'not specified'}\n`;
+      prompt += `Currently Attending: ${
+        education.currentlyAttending === true
+          ? 'Yes'
+          : education.currentlyAttending === false
+            ? 'No'
+            : 'not specified'
+      }\n`;
+      prompt += `Grade/CGPA: ${education.gradeCgpa || 'not specified'}\n`;
+      prompt += `Description: ${education.description || 'not specified'}\n\n`;
     }
 
     prompt += `\nJOB DESCRIPTION:\n###\n${jobDescription}\n###\n`;
@@ -469,6 +531,7 @@ CRITICAL: Return ONLY valid JSON in this exact format:
 
   private async callOpenAiModel(
     experiences: UserExperienceDto[],
+    educations: UserEducationDto[],
     jobDescription: string,
   ): Promise<JobAnalysisResponse> {
     const model = this.configService.get<string>('OPENAI_MODEL');
@@ -480,7 +543,11 @@ CRITICAL: Return ONLY valid JSON in this exact format:
     const openai = this.getOpenAiClient();
 
     const systemPrompt = this.buildSystemPrompt();
-    const userPrompt = this.buildUserPrompt(experiences, jobDescription);
+    const userPrompt = this.buildUserPrompt(
+      experiences,
+      educations,
+      jobDescription,
+    );
 
     try {
       const response = await openai.chat.completions.create(
@@ -580,15 +647,22 @@ CRITICAL: Return ONLY valid JSON in this exact format:
         Array.isArray(user.profileDetails.experiences)
           ? (user.profileDetails.experiences as UserExperienceDto[])
           : [];
+      const educations: UserEducationDto[] =
+        user.profileDetails &&
+        typeof user.profileDetails === 'object' &&
+        Array.isArray(user.profileDetails.educations)
+          ? (user.profileDetails.educations as UserEducationDto[])
+          : [];
 
-      // Step 4: Validate user profile data (experiences must have skills)
-      this.validateUserProfile(experiences);
+      // Step 4: Validate user profile data.
+      this.validateUserProfile(experiences, educations);
 
       // Step 5: Call OpenAI with profile + job description (using normalized/trimmed version)
       // This combines buildSystemPrompt, buildUserPrompt, and calls OpenAI API
       const normalizedJobDescription = request.jobDescription.trim();
       const analysisResult = await this.callOpenAiModel(
         experiences,
+        educations,
         normalizedJobDescription,
       );
 
