@@ -74,7 +74,7 @@ export default function ProfessionalDetails({
             Professional Details
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Update your professional information here.
+            Add internships, work, freelance, or practical experience if you have any.
           </p>
         </div>
 
@@ -93,11 +93,14 @@ export default function ProfessionalDetails({
         {!Array.isArray(data) ? (
           <p className="text-gray-500">Loading professional details...</p>
         ) : (
-        data.map((entry, index) => (
-          <div
-            key={entry.id}
-            className="rounded-xl border border-gray-200 p-5 shadow-sm"
-          >
+        data.map((entry, index) => {
+          const fieldId = (field: string) => `experience-${entry.id}-${field}`;
+
+          return (
+            <div
+              key={entry.id}
+              className="rounded-xl border border-gray-200 p-5 shadow-sm"
+            >
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-800">
                 Experience {index + 1}
@@ -117,10 +120,14 @@ export default function ProfessionalDetails({
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor={fieldId("current-position")}
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Current Position
                 </label>
                 <input
+                  id={fieldId("current-position")}
                   type="text"
                   value={entry.currentPosition || ''}
                   onChange={(e) =>
@@ -136,10 +143,14 @@ export default function ProfessionalDetails({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor={fieldId("company")}
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Company
                 </label>
                 <input
+                  id={fieldId("company")}
                   type="text"
                   value={entry.company || ''}
                   onChange={(e) =>
@@ -150,26 +161,33 @@ export default function ProfessionalDetails({
                 />
               </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Experience
+              <div className="md:col-span-2">
+                <label
+                  htmlFor={fieldId("experience-summary")}
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Experience Summary
                 </label>
-                <input
-                  type="text"
+                <textarea
+                  id={fieldId("experience-summary")}
                   value={entry.experience || ''}
                   onChange={(e) =>
                     handleFieldChange(entry.id, "experience", e.target.value)
                   }
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
-                  placeholder="Enter your experience"
+                  className="min-h-28 w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500"
+                  placeholder="Summarize responsibilities, achievements, tools used, internships, freelance work, or relevant practical experience"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor={fieldId("skills")}
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Skills
                 </label>
                 <input
+                  id={fieldId("skills")}
                   type="text"
                   value={entry.skills || ''}
                   onChange={(e) =>
@@ -181,10 +199,14 @@ export default function ProfessionalDetails({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor={fieldId("start-date")}
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   Start Date
                 </label>
                 <input
+                  id={fieldId("start-date")}
                   type="date"
                   value={entry.startDate || ''}
                   onChange={(e) =>
@@ -195,10 +217,14 @@ export default function ProfessionalDetails({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor={fieldId("end-date")}
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
                   End Date
                 </label>
                 <input
+                  id={fieldId("end-date")}
                   type="date"
                   value={entry.endDate || ''}
                   onChange={(e) =>
@@ -228,7 +254,8 @@ export default function ProfessionalDetails({
               </label>
             </div>
           </div>
-        ))
+        );
+        })
         )}
       </div>
 

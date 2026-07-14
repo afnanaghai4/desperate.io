@@ -159,14 +159,17 @@ export default function ProfileSetupContainer() {
   return (
     <main className="flex-1 px-6 py-10">
       <div className="mx-auto flex w-full max-w-6xl gap-6">
-        <div className="w-full animate-in fade-in slide-in-from-bottom-8 duration-700 md:w-[30%]">
+        <div className="w-full md:w-[30%]">
           <ProfileSidebar
             activeSection={activeSection}
             onSectionChange={setActiveSection}
           />
         </div>
 
-        <div className="w-full animate-in fade-in slide-in-from-bottom-8 delay-200 duration-700 md:w-[70%]">
+        <div
+          key={activeSection}
+          className="profile-section-panel w-full md:w-[70%]"
+        >
           {activeSection === "personal" ? (
             <PersonalDetails
               data={personalData}

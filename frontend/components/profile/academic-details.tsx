@@ -16,6 +16,14 @@ interface AcademicDetailsProps {
   subtitle?: string;
 }
 
+function RequiredMark() {
+  return (
+    <span className="ml-1 text-red-600" aria-hidden="true">
+      *
+    </span>
+  );
+}
+
 export default function AcademicDetails({
   data,
   setData,
@@ -114,6 +122,7 @@ export default function AcademicDetails({
                     className="mb-2 block text-sm font-medium text-gray-700"
                   >
                     Institute Name
+                    <RequiredMark />
                   </label>
                   <input
                     id={fieldId("institute-name")}
@@ -133,6 +142,7 @@ export default function AcademicDetails({
                     className="mb-2 block text-sm font-medium text-gray-700"
                   >
                     Degree Name
+                    <RequiredMark />
                   </label>
                   <input
                     id={fieldId("degree-name")}
@@ -152,6 +162,7 @@ export default function AcademicDetails({
                     className="mb-2 block text-sm font-medium text-gray-700"
                   >
                     Field of Study
+                    <RequiredMark />
                   </label>
                   <input
                     id={fieldId("field-of-study")}
@@ -190,6 +201,7 @@ export default function AcademicDetails({
                     className="mb-2 block text-sm font-medium text-gray-700"
                   >
                     Start Date
+                    <RequiredMark />
                   </label>
                   <input
                     id={fieldId("start-date")}
@@ -208,6 +220,7 @@ export default function AcademicDetails({
                     className="mb-2 block text-sm font-medium text-gray-700"
                   >
                     End Date
+                    {!entry.currentlyAttending && <RequiredMark />}
                   </label>
                   <input
                     id={fieldId("end-date")}
