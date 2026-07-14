@@ -9,10 +9,16 @@ import { getJobById, GetJobResponse } from "@/lib/job-api";
 import { Job } from "@/types/job";
 import { JobAnalysisResponse } from "@/types/job-analysis";
 
-const replaceMock = vi.fn();
-const routerMock = {
-  replace: replaceMock,
-};
+const { replaceMock, routerMock } = vi.hoisted(() => {
+  const replace = vi.fn();
+
+  return {
+    replaceMock: replace,
+    routerMock: {
+      replace,
+    },
+  };
+});
 
 vi.mock("next/navigation", () => ({
   useRouter: () => routerMock,
@@ -109,6 +115,15 @@ describe("JobDetailPageContent", () => {
 
     expect(await screen.findByRole("heading", { name: "Saved job not found" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back to saved jobs" })).toHaveAttribute("href", "/jobs");
+  });
+
+  it("shows a not found state when the saved job belongs to another user", async () => {
+    getJobByIdMock.mockRejectedValue(new ApiError("Forbidden", 403));
+
+    render(<JobDetailPageContent jobId={42} />);
+
+    expect(await screen.findByRole("heading", { name: "Saved job not found" })).toBeInTheDocument();
+    expect(screen.getByText("This job may have been deleted, or you may not have access to it.")).toBeInTheDocument();
   });
 
   it("shows a retry action when loading fails", async () => {

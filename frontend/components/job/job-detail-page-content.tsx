@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import JobAnalysisLayout from "@/components/job/job-analysis-layout";
 import { getJobById, GetJobResponse } from "@/lib/job-api";
@@ -14,75 +14,59 @@ interface JobDetailPageContentProps {
 
 type LoadState =
   | { status: "loading" }
-  | { status: "ready"; data: GetJobResponse }
-  | { status: "not-found" }
-  | { status: "error"; message: string };
+  | { status: "ready"; jobId: number; data: GetJobResponse }
+  | { status: "not-found"; jobId: number }
+  | { status: "error"; jobId: number; message: string };
 
 export default function JobDetailPageContent({ jobId }: JobDetailPageContentProps) {
   const router = useRouter();
+  const requestIdRef = useRef(0);
   const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
 
-  const loadJob = useCallback(async () => {
-    setLoadState({ status: "loading" });
-
+  const fetchJob = useCallback(async (requestId: number) => {
     try {
       const data = await getJobById(jobId);
-      setLoadState({ status: "ready", data });
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
+
+      setLoadState({ status: "ready", jobId, data });
     } catch (error) {
+      if (requestId !== requestIdRef.current) {
+        return;
+      }
+
       if (isApiErrorStatus(error, [401])) {
         router.replace("/login");
         return;
       }
 
       if (isApiErrorStatus(error, [403, 404])) {
-        setLoadState({ status: "not-found" });
+        setLoadState({ status: "not-found", jobId });
         return;
       }
 
       const message = error instanceof Error ? error.message : "Unable to load this saved job.";
-      setLoadState({ status: "error", message });
+      setLoadState({ status: "error", jobId, message });
     }
   }, [jobId, router]);
+
+  const loadJob = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
+    setLoadState({ status: "loading" });
+    await fetchJob(requestId);
+  }, [fetchJob]);
 
   useEffect(() => {
-    let isCurrent = true;
-
-    async function loadCurrentJob() {
-      setLoadState({ status: "loading" });
-
-      try {
-        const data = await getJobById(jobId);
-        if (isCurrent) {
-          setLoadState({ status: "ready", data });
-        }
-      } catch (error) {
-        if (!isCurrent) {
-          return;
-        }
-
-        if (isApiErrorStatus(error, [401])) {
-          router.replace("/login");
-          return;
-        }
-
-        if (isApiErrorStatus(error, [403, 404])) {
-          setLoadState({ status: "not-found" });
-          return;
-        }
-
-        const message = error instanceof Error ? error.message : "Unable to load this saved job.";
-        setLoadState({ status: "error", message });
-      }
-    }
-
-    void loadCurrentJob();
+    const requestId = ++requestIdRef.current;
+    void fetchJob(requestId);
 
     return () => {
-      isCurrent = false;
+      requestIdRef.current += 1;
     };
-  }, [jobId, router]);
+  }, [fetchJob]);
 
-  if (loadState.status === "loading") {
+  if (loadState.status === "loading" || loadState.jobId !== jobId) {
     return (
       <main className="flex-1 container mx-auto px-4 py-8">
         <p className="text-lg text-gray-600">Loading saved job...</p>
