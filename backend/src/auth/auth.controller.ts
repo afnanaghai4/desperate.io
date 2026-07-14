@@ -18,7 +18,7 @@ import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 interface AuthRequest extends Request {
-  user: { userId: number; email: string };
+  user: { userId: number; email: string; username?: string };
 }
 
 @Controller('auth')
