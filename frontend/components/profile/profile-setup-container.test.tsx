@@ -52,6 +52,8 @@ describe("ProfileSetupContainer", () => {
     render(<ProfileSetupContainer />);
 
     await screen.findByPlaceholderText("Enter your full name");
+    expect(screen.getByPlaceholderText("Your username")).toHaveValue("afnan");
+    expect(screen.getByPlaceholderText("Your username")).toHaveAttribute("readonly");
     await user.type(screen.getByPlaceholderText("Enter your full name"), "Afnan Aghai");
     await user.click(screen.getByRole("button", { name: "Professional Details" }));
     await user.click(screen.getByRole("button", { name: "Complete" }));
