@@ -6,6 +6,8 @@ on:
     types: [completed]
     branches: [master]
 
+permissions: {}
+
 concurrency:
   group: backend-production-deploy
   cancel-in-progress: false
@@ -24,23 +26,41 @@ jobs:
           chmod 700 ~/.ssh
           printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_deploy_key
           chmod 600 ~/.ssh/ec2_deploy_key
-          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+          printf '%s\n' "${{ secrets.EC2_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
 
       - name: Deploy backend
         run: |
-          ssh -i ~/.ssh/ec2_deploy_key "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<'EOF'
+          ssh -i ~/.ssh/ec2_deploy_key -o StrictHostKeyChecking=yes "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<'EOF'
             set -euo pipefail
             cd "${{ secrets.EC2_APP_DIR }}"
+            TARGET_SHA="${{ github.event.workflow_run.head_sha }}"
             git fetch origin master
             git checkout master
             git pull --ff-only origin master
+            CURRENT_SHA="$(git rev-parse HEAD)"
+            if [ "$CURRENT_SHA" != "$TARGET_SHA" ]; then
+              echo "Stale deployment run: CI passed for $TARGET_SHA but master is $CURRENT_SHA."
+              exit 1
+            fi
             docker compose -f docker-compose.prod.yaml up -d --build backend
             docker compose -f docker-compose.prod.yaml ps
           EOF
 
       - name: Verify backend health
         run: |
-          ssh -i ~/.ssh/ec2_deploy_key "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<'EOF'
+          ssh -i ~/.ssh/ec2_deploy_key -o StrictHostKeyChecking=yes "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<'EOF'
             set -euo pipefail
-            curl --fail --silent --show-error http://127.0.0.1:4000/health
+            cd "${{ secrets.EC2_APP_DIR }}"
+            BACKEND_PORT="$(awk -F= '$1 == "BACKEND_PORT" { print $2; exit }' .env)"
+            : "${BACKEND_PORT:?BACKEND_PORT is required in root .env}"
+            for attempt in $(seq 1 12); do
+              if curl --fail --silent --show-error "http://127.0.0.1:${BACKEND_PORT}/health"; then
+                exit 0
+              fi
+              echo "Health check failed on attempt ${attempt}; retrying..."
+              sleep 5
+            done
+            echo "Backend health check failed after retries."
+            exit 1
           EOF

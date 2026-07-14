@@ -10,14 +10,33 @@ The deployment workflow:
 
 1. Connects to the production server over SSH using GitHub Actions secrets.
 2. Changes into the configured app directory.
-3. Fetches and fast-forwards to the latest `master`.
-4. Rebuilds and restarts the backend service with `docker compose`.
-5. Runs a production health check against the backend from inside the server.
+3. Fetches and fast-forwards to `master`.
+4. Verifies the server checkout matches the exact CI-tested commit SHA from the triggering workflow run.
+5. Rebuilds and restarts the backend service with `docker compose`.
+6. Runs a production health check against the backend from inside the server.
+
+If `master` has moved beyond the CI-tested commit while an older deployment is queued, the stale deployment exits before rebuilding. The newer successful CI run should perform the deployment.
+
+The deployment workflow expects these GitHub Actions secrets:
+
+- `EC2_HOST`
+- `EC2_USER`
+- `EC2_APP_DIR`
+- `EC2_SSH_KEY`
+- `EC2_KNOWN_HOSTS`
 
 The production health check is:
 
 ```bash
-curl --fail --silent --show-error http://127.0.0.1:4000/health
+for attempt in $(seq 1 12); do
+  if curl --fail --silent --show-error "http://127.0.0.1:${BACKEND_PORT}/health"; then
+    exit 0
+  fi
+  echo "Health check failed on attempt ${attempt}; retrying..."
+  sleep 5
+done
+echo "Backend health check failed after retries."
+exit 1
 ```
 
 If the health check fails, the GitHub Actions deployment job fails and the deployment should be investigated before any further release work.
@@ -29,7 +48,10 @@ Use this when a deployment reaches production but the backend is unhealthy or a 
 SSH into the production server, then run:
 
 ```bash
+EC2_APP_DIR="/path/to/app"
 cd "$EC2_APP_DIR"
+BACKEND_PORT="$(awk -F= '$1 == "BACKEND_PORT" { print $2; exit }' .env)"
+: "${BACKEND_PORT:?BACKEND_PORT is required in root .env}"
 git log --oneline -5
 ```
 
@@ -39,7 +61,15 @@ Identify the previous known-good commit, then roll back the checked-out code and
 git checkout <previous-good-commit>
 docker compose -f docker-compose.prod.yaml up -d --build backend
 docker compose -f docker-compose.prod.yaml ps
-curl --fail --silent --show-error http://127.0.0.1:4000/health
+for attempt in $(seq 1 12); do
+  if curl --fail --silent --show-error "http://127.0.0.1:${BACKEND_PORT}/health"; then
+    exit 0
+  fi
+  echo "Health check failed on attempt ${attempt}; retrying..."
+  sleep 5
+done
+echo "Backend health check failed after retries."
+exit 1
 ```
 
 If the health check passes, production is back on the previous known-good commit.
@@ -49,12 +79,23 @@ If the health check passes, production is back on the previous known-good commit
 An emergency rollback leaves the server checked out at a detached commit. After the bad change is reverted or fixed on `master`, restore the server to normal tracking state:
 
 ```bash
+EC2_APP_DIR="/path/to/app"
 cd "$EC2_APP_DIR"
+BACKEND_PORT="$(awk -F= '$1 == "BACKEND_PORT" { print $2; exit }' .env)"
+: "${BACKEND_PORT:?BACKEND_PORT is required in root .env}"
 git fetch origin master
 git checkout master
 git pull --ff-only origin master
 docker compose -f docker-compose.prod.yaml up -d --build backend
-curl --fail --silent --show-error http://127.0.0.1:4000/health
+for attempt in $(seq 1 12); do
+  if curl --fail --silent --show-error "http://127.0.0.1:${BACKEND_PORT}/health"; then
+    exit 0
+  fi
+  echo "Health check failed on attempt ${attempt}; retrying..."
+  sleep 5
+done
+echo "Backend health check failed after retries."
+exit 1
 ```
 
 ## Preferred Follow-Up For Bad Merged PRs
