@@ -6,6 +6,8 @@ This runbook is intentionally sanitized. Do not add secrets, SSH key paths, publ
 
 Backend deployment is handled by GitHub Actions after the `CI` workflow completes successfully on `master`.
 
+The deployment job runs in the GitHub Actions `production` environment. Store the deployment secrets there when environment-level approvals or tighter secret scoping are enabled.
+
 The deployment workflow:
 
 1. Connects to the production server over SSH using GitHub Actions secrets.
@@ -15,7 +17,7 @@ The deployment workflow:
 5. Rebuilds and restarts the backend service with `docker compose`.
 6. Runs a production health check against the backend from inside the server.
 
-If `master` has moved beyond the CI-tested commit while an older deployment is queued, the stale deployment exits before rebuilding. The newer successful CI run should perform the deployment.
+If `master` has moved beyond the CI-tested commit while an older deployment is queued, the stale deployment exits as a no-op before rebuilding. The newer successful CI run should perform the deployment.
 
 The deployment workflow expects these GitHub Actions secrets:
 
@@ -24,6 +26,8 @@ The deployment workflow expects these GitHub Actions secrets:
 - `EC2_APP_DIR`
 - `EC2_SSH_KEY`
 - `EC2_KNOWN_HOSTS`
+
+The production server must also have a server-only root `.env` in the app directory, derived from `.env.production.example`. The root `.env` supplies `BACKEND_PORT` for Docker Compose and the local health checks.
 
 The production health check is:
 
@@ -50,6 +54,7 @@ SSH into the production server, then run:
 ```bash
 EC2_APP_DIR="/path/to/app"
 cd "$EC2_APP_DIR"
+# BACKEND_PORT is read from the server-only root .env created from .env.production.example.
 BACKEND_PORT="$(awk -F= '$1 == "BACKEND_PORT" { print $2; exit }' .env)"
 : "${BACKEND_PORT:?BACKEND_PORT is required in root .env}"
 git log --oneline -5
@@ -81,6 +86,7 @@ An emergency rollback leaves the server checked out at a detached commit. After 
 ```bash
 EC2_APP_DIR="/path/to/app"
 cd "$EC2_APP_DIR"
+# BACKEND_PORT is read from the server-only root .env created from .env.production.example.
 BACKEND_PORT="$(awk -F= '$1 == "BACKEND_PORT" { print $2; exit }' .env)"
 : "${BACKEND_PORT:?BACKEND_PORT is required in root .env}"
 git fetch origin master

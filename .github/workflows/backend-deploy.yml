@@ -16,6 +16,7 @@ jobs:
   deploy-backend:
     name: Deploy backend to EC2
     runs-on: ubuntu-latest
+    environment: production
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 15
 
@@ -30,7 +31,9 @@ jobs:
           chmod 600 ~/.ssh/known_hosts
 
       - name: Deploy backend
+        id: deploy
         run: |
+          set +e
           ssh -i ~/.ssh/ec2_deploy_key -o StrictHostKeyChecking=yes "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<'EOF'
             set -euo pipefail
             cd "${{ secrets.EC2_APP_DIR }}"
@@ -41,13 +44,23 @@ jobs:
             CURRENT_SHA="$(git rev-parse HEAD)"
             if [ "$CURRENT_SHA" != "$TARGET_SHA" ]; then
               echo "Stale deployment run: CI passed for $TARGET_SHA but master is $CURRENT_SHA."
-              exit 1
+              exit 42
             fi
             docker compose -f docker-compose.prod.yaml up -d --build backend
             docker compose -f docker-compose.prod.yaml ps
           EOF
+          status=$?
+          if [ "$status" -eq 42 ]; then
+            echo "deployed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$status" -ne 0 ]; then
+            exit "$status"
+          fi
+          echo "deployed=true" >> "$GITHUB_OUTPUT"
 
       - name: Verify backend health
+        if: ${{ steps.deploy.outputs.deployed == 'true' }}
         run: |
           ssh -i ~/.ssh/ec2_deploy_key -o StrictHostKeyChecking=yes "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" <<'EOF'
             set -euo pipefail
